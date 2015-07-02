@@ -3,6 +3,7 @@ package com.algo.hha.fhsurvey.adapter;
 import android.app.Activity;
 import android.content.Context;
 import android.graphics.Typeface;
+import android.os.Handler;
 import android.text.InputType;
 import android.view.View;
 import android.view.ViewGroup;
@@ -24,7 +25,7 @@ import java.util.List;
 /**
  * Created by heinhtetaung on 7/1/15.
  */
-public class QuestionFormAdapter extends BaseAdapter implements View.OnClickListener, RadioGroup.OnCheckedChangeListener {
+public class QuestionFormAdapter extends BaseAdapter implements View.OnClickListener {
 
     private List<List<QuestionFormData>> datalist = new ArrayList<>();
     private Activity mActivity;
@@ -70,17 +71,6 @@ public class QuestionFormAdapter extends BaseAdapter implements View.OnClickList
     @Override
     public void onClick(View v) {
 
-    }
-
-    @Override
-    public void onCheckedChanged(RadioGroup group, int checkedId) {
-
-        int itemposition = (int) group.getTag();
-        List<QuestionFormData> answerlist = datalist.get(itemposition);
-
-        RadioButton rb = (RadioButton) group.getChildAt(checkedId);
-        if(rb == null) return;
-        Toast.makeText(mActivity, String.valueOf(checkedId) + "     " + String.valueOf(rb.getText()) + "      " + answerlist.get(checkedId), Toast.LENGTH_SHORT).show();
     }
 
     private View matchUIwithItemType(int position){
@@ -154,7 +144,10 @@ public class QuestionFormAdapter extends BaseAdapter implements View.OnClickList
      * @return view
      * to use as listview's item
      */
-    private View createTextInputAnswer(int position){
+    private int lastFocussedPosition = -1;
+    private Handler handler = new Handler();
+
+    private View createTextInputAnswer(final int position){
 
         List<QuestionFormData> itemlist = datalist.get(position);
 
@@ -178,12 +171,35 @@ public class QuestionFormAdapter extends BaseAdapter implements View.OnClickList
         linearLayout.addView(tv_answer_title);
 
         //create edittext as requirement
-        EditText editText = new EditText(mActivity);
+        final EditText editText = new EditText(mActivity);
         LinearLayout.LayoutParams editText_param = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         title_param.setMargins(8, 8, 8, 8);
         editText.setLayoutParams(editText_param);
-        editText.setInputType(InputType.TYPE_CLASS_TEXT);
-        editText.setSingleLine();
+        editText.setEms(10);
+
+        editText.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+
+            @Override
+            public void onFocusChange(View v, boolean hasFocus) {
+                if (hasFocus) {
+                    handler.postDelayed(new Runnable() {
+
+                        @Override
+                        public void run() {
+                            if (lastFocussedPosition == -1 || lastFocussedPosition == position) {
+                                lastFocussedPosition = position;
+                                editText.requestFocus();
+                            }
+                        }
+                    }, 200);
+
+                } else {
+                    lastFocussedPosition = -1;
+                }
+            }
+        });
+
+
         linearLayout.addView(editText);
 
         return linearLayout;
