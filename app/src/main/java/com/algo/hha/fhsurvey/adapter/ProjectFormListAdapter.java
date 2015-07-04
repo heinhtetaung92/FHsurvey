@@ -11,6 +11,8 @@ import android.widget.TextView;
 import com.algo.hha.fhsurvey.R;
 import com.algo.hha.fhsurvey.model.ProjectData;
 import com.algo.hha.fhsurvey.model.ProjectFormData;
+import com.algo.hha.fhsurvey.utility.ColorUtil;
+import com.algo.hha.fhsurvey.utility.RoundDrawable;
 
 import java.util.List;
 
@@ -59,6 +61,7 @@ public class ProjectFormListAdapter extends BaseAdapter {
 
             holder = new Holder();
             holder.project_description = (TextView) convertView.findViewById(R.id.custom_form_list_description);
+            holder.roundicon = (TextView) convertView.findViewById(R.id.formlist_roundicon);
 
             convertView.setTag(holder);
         }else{
@@ -68,12 +71,14 @@ public class ProjectFormListAdapter extends BaseAdapter {
         ProjectFormData data = datalist.get(position);
 
         holder.project_description.setText(data.get_formDescription());
+        holder.roundicon.setBackground(RoundDrawable.createUserDrawable(mActivity, ColorUtil.getRandomColor()));
+        holder.roundicon.setText(data.get_formDescription().substring(0, 1));
 
         return convertView;
     }
 
     public class Holder{
-        public TextView project_description;
+        public TextView project_description, roundicon;
     }
 
 }

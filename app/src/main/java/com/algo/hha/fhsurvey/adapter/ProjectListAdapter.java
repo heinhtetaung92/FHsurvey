@@ -10,6 +10,8 @@ import android.widget.TextView;
 
 import com.algo.hha.fhsurvey.R;
 import com.algo.hha.fhsurvey.model.ProjectData;
+import com.algo.hha.fhsurvey.utility.ColorUtil;
+import com.algo.hha.fhsurvey.utility.RoundDrawable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -60,6 +62,7 @@ public class ProjectListAdapter extends BaseAdapter {
             holder.project_name = (TextView) convertView.findViewById(R.id.custom_project_list_name);
             holder.project_description = (TextView) convertView.findViewById(R.id.custom_project_list_description);
             holder.project_expiredate = (TextView) convertView.findViewById(R.id.custom_project_list_expiredate);
+            holder.roundicon = (TextView) convertView.findViewById(R.id.projectlist_roundicon);
 
             convertView.setTag(holder);
         }else{
@@ -68,6 +71,8 @@ public class ProjectListAdapter extends BaseAdapter {
 
         ProjectData data = datalist.get(position);
 
+        holder.roundicon.setBackground(RoundDrawable.createUserDrawable(mActivity, ColorUtil.getRandomColor()));
+        holder.roundicon.setText(data.get_projectName().substring(0, 1));
         holder.project_name.setText(data.get_projectName());
         holder.project_description.setText(data.get_description());
         holder.project_expiredate.setText(data.get_expireDate().substring(0, 10));
@@ -77,6 +82,7 @@ public class ProjectListAdapter extends BaseAdapter {
 
     public class Holder{
         public TextView project_name, project_description, project_expiredate;
+        public TextView roundicon;
     }
 
 }

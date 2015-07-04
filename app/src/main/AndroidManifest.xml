@@ -3,15 +3,18 @@
     package="com.algo.hha.fhsurvey" >
 
     <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
 
     <application
         android:allowBackup="true"
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
-        android:theme="@style/AppTheme" >
+        android:theme="@style/AppTheme"
+        >
         <activity
             android:name=".MainActivity"
-            android:label="@string/app_name" >
+            android:label="@string/app_name"
+            android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -20,11 +23,13 @@
         </activity>
         <activity
             android:name=".QuestionFormListActivity"
-            android:label="@string/title_activity_question_form_list" >
+            android:label="@string/title_activity_question_form_list"
+            android:screenOrientation="portrait" >
         </activity>
         <activity
             android:name=".QuestionFormActivity"
-            android:label="@string/title_activity_question_form" >
+            android:label="@string/title_activity_question_form"
+            android:screenOrientation="portrait" >
         </activity>
     </application>
 
