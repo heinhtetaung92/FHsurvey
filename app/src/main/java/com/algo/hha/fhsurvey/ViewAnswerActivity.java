@@ -1,61 +1,39 @@
 package com.algo.hha.fhsurvey;
 
 import android.graphics.Typeface;
-import android.os.Handler;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AbsListView;
-import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.HorizontalScrollView;
 import android.widget.LinearLayout;
-import android.widget.ListView;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.ScrollView;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import com.algo.hha.fhsurvey.api.RetrofitAPI;
 import com.algo.hha.fhsurvey.configuration.AnswerType;
-import com.algo.hha.fhsurvey.db.QuestionFormDataORM;
+import com.algo.hha.fhsurvey.db.AnswerDataORM;
+import com.algo.hha.fhsurvey.model.AnswerData;
 import com.algo.hha.fhsurvey.model.QuestionFormData;
-import com.wdullaer.materialdatetimepicker.date.DatePickerDialog;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.List;
 
-import retrofit.Callback;
-import retrofit.RetrofitError;
-import retrofit.client.Response;
 
-/***
- * This is to show the add new answer for the survey
- * This will show questions
- */
-public class QuestionFormActivity extends ActionBarActivity implements DatePickerDialog.OnDateSetListener {
+public class ViewAnswerActivity extends ActionBarActivity {
 
-    ScrollView question_view;
+    ScrollView answer_scrollview;
     Toolbar mToolbar;
-    public List<EditText> cacheEdittext = new ArrayList<>();
-    String _id = "1";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_question_form);
+        setContentView(R.layout.activity_view_answer);
 
         overridePendingTransition(R.anim.pull_in_right, R.anim.push_out_left);
 
@@ -72,15 +50,16 @@ public class QuestionFormActivity extends ActionBarActivity implements DatePicke
             }
         });
 
-        List<List<QuestionFormData>> datalist = new ArrayList<>();
-        question_view = (ScrollView) findViewById(R.id.question_form_scrollview);
+        List<List<AnswerData>> datalist = new ArrayList<>();
+        answer_scrollview = (ScrollView) findViewById(R.id.viewanswer_scrollview);
 
         Bundle bundle = getIntent().getExtras();
         if(bundle != null){
-            String formId = bundle.getString("form_id");
-            if(formId != null){
+            String timestamp = bundle.getString("timestamp");
+            String form_id = bundle.getString("form_id");
+            if(timestamp != null && form_id != null){
                 //getDataFromServer(formId);
-                List<List<QuestionFormData>> dl = getDataFromDatabase(formId);
+                List<List<AnswerData>> dl = getDataFromDatabase(form_id, timestamp);
                 if(dl.size() > 0){
                     addDataToScrollView(dl);
                 }
@@ -96,24 +75,26 @@ public class QuestionFormActivity extends ActionBarActivity implements DatePicke
         }else{
             toolbarTitle.setText("FHSurvey");
         }
+
     }
 
 
-    private List<List<QuestionFormData>> getDataFromDatabase(String form_id){
 
-        List<QuestionFormData> dbdatalist = QuestionFormDataORM.getQuestionFormDatalist(QuestionFormActivity.this, form_id);
+    private List<List<AnswerData>> getDataFromDatabase(String form_id, String timestamp){
+
+        List<AnswerData> dbdatalist = AnswerDataORM.getAnswerDatalist(ViewAnswerActivity.this, form_id, timestamp);
 
         if(dbdatalist == null)
             return null;
 
-        List<List<QuestionFormData>> maindatalist = new ArrayList<>();
+        List<List<AnswerData>> maindatalist = new ArrayList<>();
 
         String tempQuestionID = null;
-        List<QuestionFormData> datalist = null;
+        List<AnswerData> datalist = null;
 
         for(int i=0;i<dbdatalist.size();i++) {
 
-            QuestionFormData data = dbdatalist.get(i);
+            AnswerData data = dbdatalist.get(i);
 
             //check new Answer Group Id or not
             if (tempQuestionID == null) {
@@ -126,13 +107,13 @@ public class QuestionFormActivity extends ActionBarActivity implements DatePicke
                 datalist.add(data);
 
                 if(i == dbdatalist.size() - 2){
-                    List<QuestionFormData> templist = datalist;
+                    List<AnswerData> templist = datalist;
                     maindatalist.add(templist);
                 }
 
             } else {//new answer group id, add old list to main data list and create new list to add
                 Log.i("Question ID", "They are not equal");
-                List<QuestionFormData> templist = datalist;
+                List<AnswerData> templist = datalist;
                 maindatalist.add(templist);
                 datalist = new ArrayList<>();
                 datalist.add(data);
@@ -148,7 +129,7 @@ public class QuestionFormActivity extends ActionBarActivity implements DatePicke
         RetrofitAPI.getInstance().getService().getFormDataByFormID(form_id, new Callback<String>() {
             @Override
             public void success(String s, Response response) {
-                List<List<QuestionFormData>> datalist = parseJSONToObject(s);
+                List<List<AnswerData>> datalist = parseJSONToObject(s);
                 addDataToScrollView(datalist);
             }
 
@@ -159,16 +140,16 @@ public class QuestionFormActivity extends ActionBarActivity implements DatePicke
         });
     }*/
 
-    /*private List<List<QuestionFormData>> parseJSONToObject(String s){
+    /*private List<List<AnswerData>> parseJSONToObject(String s){
         try {
             JSONArray arr = new JSONArray(s);
-            List<List<QuestionFormData>> maindatalist = new ArrayList<>();
-            List<QuestionFormData> datalist = new ArrayList<>();
+            List<List<AnswerData>> maindatalist = new ArrayList<>();
+            List<AnswerData> datalist = new ArrayList<>();
             String tempQuestionID = null;
 
             for(int i=0;i<arr.length();i++) {
 
-                QuestionFormData data = new QuestionFormData();
+                AnswerData data = new AnswerData();
                 JSONObject obj = arr.getJSONObject(i);
 
                 if (!obj.isNull("ProjectID")) {
@@ -278,7 +259,7 @@ public class QuestionFormActivity extends ActionBarActivity implements DatePicke
                 }
                 else{//new answer group id, add old list to main data list and create new list to add
                     Log.i("Question ID", "They are not equal");
-                    List<QuestionFormData> templist = datalist;
+                    List<AnswerData> templist = datalist;
                     maindatalist.add(templist);
                     datalist = new ArrayList<>();
                     datalist.add(data);
@@ -297,10 +278,10 @@ public class QuestionFormActivity extends ActionBarActivity implements DatePicke
 
 
 
-    private void addDataToScrollView(List<List<QuestionFormData>> dl){
-        if(question_view == null) return;
+    private void addDataToScrollView(List<List<AnswerData>> dl){
+        if(answer_scrollview == null) return;
 
-        question_view.removeAllViews();
+        answer_scrollview.removeAllViews();
 
 
         //crate linearlayout as main layout
@@ -327,7 +308,7 @@ public class QuestionFormActivity extends ActionBarActivity implements DatePicke
 
         //linearLayout.addView(createSaveButton());
 
-        question_view.addView(linearLayout);
+        answer_scrollview.addView(linearLayout);
 
     }
 
@@ -346,8 +327,25 @@ public class QuestionFormActivity extends ActionBarActivity implements DatePicke
         return btnSave;
     }
 
-    private View matchUIwithItemType(int position, List<List<QuestionFormData>> dl){
-        List<QuestionFormData> itemlist = dl.get(position);
+    private View createGroupTitleTextView(AnswerData data){
+        //add group title textview to layout
+        TextView tv_answer_grouptitle = new TextView(this);
+        LinearLayout.LayoutParams grouptitle_param = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        grouptitle_param.setMargins(16, 16, 16, 16);
+        tv_answer_grouptitle.setLayoutParams(grouptitle_param);
+
+        tv_answer_grouptitle.setText(data.get_QuestionGroupDescription());
+        tv_answer_grouptitle.setTextSize(18);
+        tv_answer_grouptitle.setTextColor(getResources().getColor(android.R.color.white));
+        tv_answer_grouptitle.setPadding(16, 16, 16, 16);
+        tv_answer_grouptitle.setBackgroundColor(getResources().getColor(R.color.pink_500));
+        tv_answer_grouptitle.setTypeface(null, Typeface.BOLD);
+
+        return tv_answer_grouptitle;
+    }
+
+    private View matchUIwithItemType(int position, List<List<AnswerData>> dl){
+        List<AnswerData> itemlist = dl.get(position);
         if(itemlist.size() <= 0){
             return null;
         }else{
@@ -365,23 +363,6 @@ public class QuestionFormActivity extends ActionBarActivity implements DatePicke
         return null;
     }
 
-    private View createGroupTitleTextView(QuestionFormData data){
-        //add group title textview to layout
-        TextView tv_answer_grouptitle = new TextView(this);
-        LinearLayout.LayoutParams grouptitle_param = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        grouptitle_param.setMargins(16, 16, 16, 16);
-        tv_answer_grouptitle.setLayoutParams(grouptitle_param);
-
-        tv_answer_grouptitle.setText(data.get_QuestionGroupDescription());
-        tv_answer_grouptitle.setTextSize(18);
-        tv_answer_grouptitle.setTextColor(getResources().getColor(android.R.color.white));
-        tv_answer_grouptitle.setPadding(16, 16, 16, 16);
-        tv_answer_grouptitle.setBackgroundColor(getResources().getColor(R.color.pink_500));
-        tv_answer_grouptitle.setTypeface(null, Typeface.BOLD);
-
-        return tv_answer_grouptitle;
-    }
-
     /***
      * this method create a view with radio button data from server
      * @param position
@@ -389,8 +370,8 @@ public class QuestionFormActivity extends ActionBarActivity implements DatePicke
      * @return view
      * to use as listview's item
      */
-    private View createSingleChoiceAnswer(int position, List<List<QuestionFormData>> dl){
-        List<QuestionFormData> itemlist = dl.get(position);
+    private View createSingleChoiceAnswer(int position, List<List<AnswerData>> dl){
+        List<AnswerData> itemlist = dl.get(position);
 
         //crate linearlayout as main layout
         LinearLayout linearLayout = new LinearLayout(this);
@@ -401,7 +382,6 @@ public class QuestionFormActivity extends ActionBarActivity implements DatePicke
         //set orientation
         linearLayout.setOrientation(LinearLayout.VERTICAL);
 
-        //title
         TextView tv_answer_title = new TextView(this);
         LinearLayout.LayoutParams title_param = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         title_param.setMargins(16, 16, 16, 16);
@@ -439,8 +419,11 @@ public class QuestionFormActivity extends ActionBarActivity implements DatePicke
             radioButton.setFocusable(false);
             radioButton.setEnabled(false);
             //checked first item(default)
-            /*if(i == 0)
-                radioButton.setChecked(true);*/
+            if(itemlist.get(i).get_IS_ACTIVE() != null) {
+                if (itemlist.get(i).get_IS_ACTIVE().equals("true")){
+                    radioButton.setChecked(true);
+                }
+            }
         }
         linearLayout.addView(rd_group);
 
@@ -455,9 +438,9 @@ public class QuestionFormActivity extends ActionBarActivity implements DatePicke
      * to use as listview's item
      */
 
-    private View createTextInputAnswer(final int position, List<List<QuestionFormData>> dl){
+    private View createTextInputAnswer(final int position, List<List<AnswerData>> dl){
 
-        List<QuestionFormData> itemlist = dl.get(position);
+        List<AnswerData> itemlist = dl.get(position);
 
         //crate linearlayout as main layout
         LinearLayout linearLayout = new LinearLayout(this);
@@ -499,21 +482,21 @@ public class QuestionFormActivity extends ActionBarActivity implements DatePicke
         editText.setSingleLine();
         editText.setLayoutParams(editText_param);
         editText.setEms(10);
-        //editText.setFocusable(false);
-        editText.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                showDatePickerDialog();
-                editText.setId(R.id.my_edit_text_1);
+        editText.setFocusable(false);
+
+        if(itemlist.get(0).get_IS_ACTIVE() != null) {
+            if (itemlist.get(0).get_IS_ACTIVE().equals("true")){
+                editText.setText(itemlist.get(0).get_VALUE());
             }
-        });
+        }
+
         linearLayout.addView(editText);
 
         return linearLayout;
     }
 
     private View createDividerView(){
-        View view = new View(QuestionFormActivity.this);
+        View view = new View(ViewAnswerActivity.this);
         LinearLayout.LayoutParams param = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 1);
         param.setMargins(0, 16, 0, 16);
         view.setLayoutParams(param);
@@ -522,10 +505,9 @@ public class QuestionFormActivity extends ActionBarActivity implements DatePicke
         return view;
     }
 
-    private View createTableWithValue(final int position, List<List<QuestionFormData>> dl){
+    private View createTableWithValue(final int position, List<List<AnswerData>> dl){
 
-        List<QuestionFormData> itemlist = dl.get(position);
-
+        List<AnswerData> itemlist = dl.get(position);
 
         //crate linearlayout as main layout
         LinearLayout linearLayout = new LinearLayout(this);
@@ -560,8 +542,9 @@ public class QuestionFormActivity extends ActionBarActivity implements DatePicke
             linearLayout.addView(tv_answer_instruction);
         }
 
+
         //Main layout we will see as table layout
-        LinearLayout mainlayout = new LinearLayout(QuestionFormActivity.this);
+        LinearLayout mainlayout = new LinearLayout(ViewAnswerActivity.this);
         LinearLayout.LayoutParams param = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         param.setMargins(16, 16, 16, 16);
         mainlayout.setLayoutParams(param);
@@ -570,17 +553,17 @@ public class QuestionFormActivity extends ActionBarActivity implements DatePicke
         //get column count from list
         int columnCount = getColumnCountFromDataList(itemlist);
 
-        LinearLayout titleLayout = new LinearLayout(QuestionFormActivity.this);
-        LinearLayout.LayoutParams titleparam = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        LinearLayout titleLayout = new LinearLayout(ViewAnswerActivity.this);
+        HorizontalScrollView.LayoutParams titleparam = new HorizontalScrollView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         titleLayout.setOrientation(LinearLayout.HORIZONTAL);
         titleLayout.setMinimumHeight(56);
         titleLayout.setLayoutParams(titleparam);
         for(int i=0;i<columnCount+1;i++){
 
-            TextView textView = new TextView(QuestionFormActivity.this);
+            TextView textView = new TextView(ViewAnswerActivity.this);
             LinearLayout.LayoutParams titletextparam;
-
             textView.setPadding( 8, 8, 8, 8);
+
             if(i == 0){
                 textView.setText("");
                 titletextparam = new LinearLayout.LayoutParams(400, ViewGroup.LayoutParams.MATCH_PARENT);
@@ -589,7 +572,6 @@ public class QuestionFormActivity extends ActionBarActivity implements DatePicke
                 titletextparam = new LinearLayout.LayoutParams(350, ViewGroup.LayoutParams.MATCH_PARENT);
             }
             textView.setLayoutParams(titletextparam);
-
             textView.setBackgroundResource(R.drawable.background_tabletextview);
             titleLayout.addView(textView);
 
@@ -601,14 +583,14 @@ public class QuestionFormActivity extends ActionBarActivity implements DatePicke
         for(int i=0;i<itemlist.size();i+=columnCount){
 
             //create layout for value not title
-            LinearLayout valueLayout = new LinearLayout(QuestionFormActivity.this);
+            LinearLayout valueLayout = new LinearLayout(ViewAnswerActivity.this);
             LinearLayout.LayoutParams valuelayoutparam = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
             valueLayout.setOrientation(LinearLayout.HORIZONTAL);
-            valueLayout.setMinimumHeight(56);
+            valueLayout.setMinimumHeight(80);
             valueLayout.setLayoutParams(valuelayoutparam);
 
             //add textview for answer description that shows in frist column
-            TextView textView = new TextView(QuestionFormActivity.this);
+            TextView textView = new TextView(ViewAnswerActivity.this);
             LinearLayout.LayoutParams valuetextparam = new LinearLayout.LayoutParams(400, ViewGroup.LayoutParams.MATCH_PARENT);
             textView.setLayoutParams(valuetextparam);
             textView.setText(itemlist.get(i).get_AnswerDescription());
@@ -619,7 +601,7 @@ public class QuestionFormActivity extends ActionBarActivity implements DatePicke
             //call loop er column Count and create EditText
             for(int j=i;j<columnCount + i;j++){
 
-                View et_view = getEditTextView();
+                View et_view = getEditTextView(itemlist.get(j));
                 if(et_view != null){
                     valueLayout.addView(et_view);
                 }
@@ -630,7 +612,7 @@ public class QuestionFormActivity extends ActionBarActivity implements DatePicke
 
         }
 
-        HorizontalScrollView horizontalScrollView = new HorizontalScrollView(QuestionFormActivity.this);
+        HorizontalScrollView horizontalScrollView = new HorizontalScrollView(ViewAnswerActivity.this);
         LinearLayout.LayoutParams horizontalScrollViewparam = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         horizontalScrollViewparam.setMargins(16,16,16,16);
         horizontalScrollView.setLayoutParams(horizontalScrollViewparam);
@@ -641,19 +623,25 @@ public class QuestionFormActivity extends ActionBarActivity implements DatePicke
         return linearLayout;
     }
 
-    private View getEditTextView(){
+    private View getEditTextView(AnswerData data){
 
-        EditText editText = new EditText(QuestionFormActivity.this);
-        LinearLayout.LayoutParams valuetextparam = new LinearLayout.LayoutParams(350, ViewGroup.LayoutParams.WRAP_CONTENT);
+        EditText editText = new EditText(ViewAnswerActivity.this);
+        LinearLayout.LayoutParams valuetextparam = new LinearLayout.LayoutParams(350, ViewGroup.LayoutParams.MATCH_PARENT);
         editText.setLayoutParams(valuetextparam);
         editText.setSingleLine();
         editText.setFocusable(false);
         editText.setBackgroundResource(R.drawable.background_tabletextview);
 
+        if(data.get_IS_ACTIVE() != null) {
+            if (data.get_IS_ACTIVE().equals("true")){
+                editText.setText(data.get_VALUE());
+            }
+        }
+
         return editText;
     }
 
-    private int getColumnCountFromDataList(List<QuestionFormData> dl){
+    private int getColumnCountFromDataList(List<AnswerData> dl){
 
         List<String> collist = new ArrayList<>();
         for(int i=0;i<dl.size();i++){
@@ -673,20 +661,4 @@ public class QuestionFormActivity extends ActionBarActivity implements DatePicke
         overridePendingTransition(R.anim.pull_in_left, R.anim.push_out_right);
     }
 
-    private void showDatePickerDialog() {
-        Calendar now = Calendar.getInstance();
-        DatePickerDialog dpd = DatePickerDialog.newInstance(
-                QuestionFormActivity.this,
-                now.get(Calendar.YEAR),
-                now.get(Calendar.MONTH),
-                now.get(Calendar.DAY_OF_MONTH)
-        );
-        dpd.show(getFragmentManager(), "Datepickerdialog");
-    }
-
-    @Override
-    public void onDateSet(DatePickerDialog datePickerDialog, int i, int i2, int i3) {
-        EditText editText = (EditText) findViewById(R.id.my_edit_text_1);
-        editText.setText("test");
-    }
 }

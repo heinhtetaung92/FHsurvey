@@ -13,4 +13,7 @@ public class APIConfig {
 
     public static final String FORMS_BY_ID_URL = "/api/Project/GetQuestionByFormID/{form_id}";
 
+    public static final String SIGN_IN = "/api/Project/GetCheckLogIn/{userid}/{password}";
+
+    public static final String REGISTER_TO_SERVER = "/auth/";
 }

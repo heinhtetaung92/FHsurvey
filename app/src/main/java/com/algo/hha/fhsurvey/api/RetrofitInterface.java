@@ -28,6 +28,15 @@ public interface RetrofitInterface
     @GET(APIConfig.FORMS_BY_ID_URL)
     public void getFormDataByFormID(@Path("form_id") String form_id, Callback<String> callback);
 
+
+
+    @GET(APIConfig.SIGN_IN)
+    public void signIn(@Path("userid") String userID, @Path("password") String pwd, Callback<String> callback);
+
+    @FormUrlEncoded
+    @POST(APIConfig.REGISTER_TO_SERVER)
+    public void registerToServer(@Field("name") String name, @Field("contact_number") String contactno, @Field("email") String email, @Field("password") String pwd, @Field("password_confirmation") String pwd_conf, Callback<String> callback);
+
 }
 
 

@@ -25,6 +25,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -245,15 +246,28 @@ public class QuestionFormListActivity extends ActionBarActivity implements Adapt
         switch (v.getId()) {
             case R.id.custom_dialog_add_answer:
                 Toast.makeText(QuestionFormListActivity.this, "Add Answer", Toast.LENGTH_SHORT).show();
+
+                if(selectedData == null)
+                    return;
+                Intent answerintent = new Intent(QuestionFormListActivity.this, AnswerActivity.class);
+                answerintent.putExtra("form_id", selectedData.get_formID());
+                answerintent.putExtra("form_description", selectedData.get_formDescription());
+                startActivity(answerintent);
+                Toast.makeText(QuestionFormListActivity.this, "View Questions", Toast.LENGTH_SHORT).show();
+
+                if(dialog != null || dialog.isShowing()){
+                    dialog.dismiss();
+                }
+
                 break;
 
             case R.id.custom_dialog_view_questions:
                 if(selectedData == null)
                     return;
-                Intent intent = new Intent(QuestionFormListActivity.this, QuestionFormActivity.class);
-                intent.putExtra("form_id", selectedData.get_formID());
-                intent.putExtra("form_description", selectedData.get_formDescription());
-                startActivity(intent);
+                Intent questionformintent = new Intent(QuestionFormListActivity.this, QuestionFormActivity.class);
+                questionformintent.putExtra("form_id", selectedData.get_formID());
+                questionformintent.putExtra("form_description", selectedData.get_formDescription());
+                startActivity(questionformintent);
                 Toast.makeText(QuestionFormListActivity.this, "View Questions", Toast.LENGTH_SHORT).show();
 
                 if(dialog != null || dialog.isShowing()){
@@ -264,6 +278,12 @@ public class QuestionFormListActivity extends ActionBarActivity implements Adapt
 
             case R.id.custom_dialog_view_answers:
                 Toast.makeText(QuestionFormListActivity.this, "View Answers", Toast.LENGTH_SHORT).show();
+
+                Intent answerlistintent = new Intent(QuestionFormListActivity.this, AnswerListActivity.class);
+                answerlistintent.putExtra("form_id", selectedData.get_formID());
+                answerlistintent.putExtra("form_description", selectedData.get_formDescription());
+                startActivity(answerlistintent);
+
                 break;
 
             case R.id.custom_dialog_download_form:
@@ -481,4 +501,21 @@ public class QuestionFormListActivity extends ActionBarActivity implements Adapt
         super.onBackPressed();
         overridePendingTransition(R.anim.pull_in_left, R.anim.push_out_right);
     }
+
+    public ArrayList<String> GetFiles(String DirectoryPath) {
+        ArrayList<String> MyFiles = new ArrayList<String>();
+        File f = new File(DirectoryPath);
+
+        f.mkdirs();
+        File[] files = f.listFiles();
+        if (files.length == 0)
+            return null;
+        else {
+            for (int i=0; i<files.length; i++)
+                MyFiles.add(files[i].getName());
+        }
+
+        return MyFiles;
+    }
+
 }

@@ -1,10 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_name">Project List</string>
+    <string name="app_name">FH Survey</string>
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
     <string name="title_activity_question_form_list">Form List</string>
     <string name="title_activity_question_form">Question Form</string>
+    <string name="title_activity_answer">AnswerActivity</string>
+    <string name="title_activity_answer_list">AnswerListActivity</string>
+    <string name="title_activity_view_answer">ViewAnswerActivity</string>
+
+    <string name="temp_id">temp_id</string>
 
 </resources>

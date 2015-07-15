@@ -13,8 +13,8 @@ public class SQLiteHelper extends SQLiteOpenHelper {
 
     private static final String TAG = "DatabaseWrapper";
 
-    private static final String DATABASE_NAME = "mytopup";
-    private static final int DATABASE_VERSION = 3;
+    private static final String DATABASE_NAME = "fhsurvey";
+    private static final int DATABASE_VERSION = 1;
 
     public SQLiteHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -25,6 +25,7 @@ public class SQLiteHelper extends SQLiteOpenHelper {
         db.execSQL(ProjectDataORM.SQL_CREATE_TABLE);
         db.execSQL(ProjectFormDataORM.SQL_CREATE_TABLE);
         db.execSQL(QuestionFormDataORM.SQL_CREATE_TABLE);
+        db.execSQL(AnswerDataORM.SQL_CREATE_TABLE);
     }
 
     @Override
@@ -32,6 +33,7 @@ public class SQLiteHelper extends SQLiteOpenHelper {
         db.execSQL(ProjectDataORM.SQL_DROP_TABLE);
         db.execSQL(ProjectFormDataORM.SQL_DROP_TABLE);
         db.execSQL(QuestionFormDataORM.SQL_DROP_TABLE);
+        db.execSQL(AnswerDataORM.SQL_DROP_TABLE);
         onCreate(db);
     }
 
