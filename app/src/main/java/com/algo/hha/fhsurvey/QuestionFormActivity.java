@@ -499,14 +499,14 @@ public class QuestionFormActivity extends ActionBarActivity implements DatePicke
         editText.setSingleLine();
         editText.setLayoutParams(editText_param);
         editText.setEms(10);
-        //editText.setFocusable(false);
-        editText.setOnClickListener(new View.OnClickListener() {
+        editText.setFocusable(false);
+        /*editText.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 showDatePickerDialog();
                 editText.setId(R.id.my_edit_text_1);
             }
-        });
+        });*/
         linearLayout.addView(editText);
 
         return linearLayout;

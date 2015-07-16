@@ -1,11 +1,14 @@
 package com.algo.hha.fhsurvey;
 
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
+import android.os.Environment;
 import android.os.Handler;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
@@ -15,18 +18,31 @@ import android.widget.Toast;
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.algo.hha.fhsurvey.adapter.ProjectFormListAdapter;
 import com.algo.hha.fhsurvey.api.RetrofitAPI;
+import com.algo.hha.fhsurvey.db.AnswerDataORM;
 import com.algo.hha.fhsurvey.db.ProjectFormDataORM;
 import com.algo.hha.fhsurvey.db.QuestionFormDataORM;
+import com.algo.hha.fhsurvey.model.AnswerData;
+import com.algo.hha.fhsurvey.model.ProjectData;
 import com.algo.hha.fhsurvey.model.ProjectFormData;
 import com.algo.hha.fhsurvey.model.QuestionFormData;
+import com.algo.hha.fhsurvey.model.UserData;
 import com.pnikosis.materialishprogress.ProgressWheel;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.supercsv.cellprocessor.Optional;
+import org.supercsv.cellprocessor.constraint.NotNull;
+import org.supercsv.cellprocessor.ift.CellProcessor;
+import org.supercsv.io.CsvMapWriter;
+import org.supercsv.io.ICsvMapWriter;
+import org.supercsv.prefs.CsvPreference;
 
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import retrofit.Callback;
@@ -46,9 +62,21 @@ public class QuestionFormListActivity extends ActionBarActivity implements Adapt
 
     MaterialDialog dialog = null;
 
+    String proj_name;
+
     ProgressDialog download_progress_dialog = null;
     int download_progress_increaseValue = 0;
     private Handler handler = new Handler();
+
+    //for csv export
+    // Fields
+
+    boolean isAlreadyExist = false;
+    private File desFile = null;
+    // Constants
+    private static final String CSV_HEADER[] = { "UserID", "QuestionID", "AnswerDescription", "AnswerID", "AnswerColumnID",
+            "UploadBy", "Answerer" };
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -88,7 +116,7 @@ public class QuestionFormListActivity extends ActionBarActivity implements Adapt
         Bundle bundle = getIntent().getExtras();
         if (bundle != null) {
             String proj_id = bundle.getString("project_id");
-            String proj_name = bundle.getString("project_name");
+            proj_name = bundle.getString("project_name");
 
             if (proj_name != null) {
                 toolbarTitle.setText(proj_name);
@@ -202,7 +230,8 @@ public class QuestionFormListActivity extends ActionBarActivity implements Adapt
         TextView tv_viewquestion = (TextView) dialog.findViewById(R.id.custom_dialog_view_questions);
         TextView tv_viewanswers = (TextView) dialog.findViewById(R.id.custom_dialog_view_answers);
         TextView tv_downloadquestion = (TextView) dialog.findViewById(R.id.custom_dialog_download_form);
-        TextView tv_uploadanswers = (TextView) dialog.findViewById(R.id.custom_dialog_upload_answers);
+        TextView tv_exportanswers = (TextView) dialog.findViewById(R.id.custom_dialog_export_answers);
+        TextView tv_uploadanswers = (TextView) dialog.findViewById(R.id.custom_dialog_upload_form);
 
         List<QuestionFormData> dl = QuestionFormDataORM.getQuestionFormDatalist(QuestionFormListActivity.this, data.get_formID());
 
@@ -211,12 +240,14 @@ public class QuestionFormListActivity extends ActionBarActivity implements Adapt
             tv_viewquestion.setEnabled(false);
             tv_viewanswers.setEnabled(false);
             tv_downloadquestion.setEnabled(true);
+            tv_exportanswers.setEnabled(false);
             tv_uploadanswers.setEnabled(false);
         }else{
             tv_addanswer.setEnabled(true);
             tv_viewquestion.setEnabled(true);
             tv_viewanswers.setEnabled(true);
             tv_downloadquestion.setEnabled(true);
+            tv_exportanswers.setEnabled(true);
             tv_uploadanswers.setEnabled(true);
         }
 
@@ -224,6 +255,7 @@ public class QuestionFormListActivity extends ActionBarActivity implements Adapt
         tv_viewquestion.setOnClickListener(this);
         tv_viewanswers.setOnClickListener(this);
         tv_downloadquestion.setOnClickListener(this);
+        tv_exportanswers.setOnClickListener(this);
         tv_uploadanswers.setOnClickListener(this);
 
     }
@@ -301,8 +333,19 @@ public class QuestionFormListActivity extends ActionBarActivity implements Adapt
 
                 break;
 
-            case R.id.custom_dialog_upload_answers:
+            case R.id.custom_dialog_export_answers:
+
                 Toast.makeText(QuestionFormListActivity.this, "Upload Answers", Toast.LENGTH_SHORT).show();
+                exportAllAnswerToCSVFile(selectedData);
+                break;
+
+            case R.id.custom_dialog_upload_form:
+
+                Intent intent = new Intent(QuestionFormListActivity.this, CSVListActivity.class);
+                intent.putExtra("form_description", selectedData.get_formDescription());
+                intent.putExtra("project_name", proj_name);
+                startActivity(intent);
+
                 break;
 
         }
@@ -346,7 +389,7 @@ public class QuestionFormListActivity extends ActionBarActivity implements Adapt
 
                 List<QuestionFormData> datalist = parseJSONToQuestionFormObject(s);
                 if(download_progress_dialog != null){
-                    download_progress_dialog.setProgress(95);
+                    download_progress_dialog.setProgress(90);
                 }
 
                 int result = QuestionFormDataORM.insertQuestionFormDataListtoDatabase(QuestionFormListActivity.this, datalist);
@@ -355,7 +398,7 @@ public class QuestionFormListActivity extends ActionBarActivity implements Adapt
 
                 //TODO to add loading progress with timeline
                 if(download_progress_dialog != null){
-                    download_progress_dialog.setProgress(100);
+                    download_progress_dialog.setProgress(95);
                     download_progress_dialog.dismiss();
                 }
 
@@ -517,5 +560,160 @@ public class QuestionFormListActivity extends ActionBarActivity implements Adapt
 
         return MyFiles;
     }
+
+
+    public void exportAllAnswerToCSVFile(ProjectFormData data){
+
+        List<UserData> userdatalist = AnswerDataORM.getAnswerTimeStampList(this, data.get_formID(), data.get_projectID());
+
+        if(userdatalist.size() <= 0){
+            Toast.makeText(QuestionFormListActivity.this, "There is no answer to export!", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        ProgressDialog progress_dialog = new ProgressDialog(QuestionFormListActivity.this);
+        progress_dialog.setCancelable(false);
+        progress_dialog.setTitle("Exporting Answers");
+        progress_dialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+        progress_dialog.setMax(userdatalist.size());
+        progress_dialog.show();
+
+        for(int n=0;n<userdatalist.size();n++){
+
+            //handle sdcard is okay or note and got addData Method
+            sdCardHandler(data, userdatalist.get(n));
+            progress_dialog.setProgress(n+1);
+        }
+
+        progress_dialog.dismiss();
+
+    }
+
+
+    private void addData(ProjectFormData projectdata, UserData userdata) {
+
+        HashMap<String, Object> ANSWER = new HashMap<>();
+        List<AnswerData> answerlist = AnswerDataORM.getOnlyAnswerDatalist(this, projectdata.get_formID(), userdata.get_timestamp());
+
+        for(int i=0;i<answerlist.size();i++){
+            ANSWER.put(CSV_HEADER[0], answerlist.get(i).get_userid());
+            ANSWER.put(CSV_HEADER[1], answerlist.get(i).get_QuestionID());
+            ANSWER.put(CSV_HEADER[2], answerlist.get(i).get_VALUE());
+            ANSWER.put(CSV_HEADER[3], answerlist.get(i).get_AnswerID());
+            ANSWER.put(CSV_HEADER[4], answerlist.get(i).get_AnswerColumnID());
+            ANSWER.put(CSV_HEADER[5], "UploadBy");
+            ANSWER.put(CSV_HEADER[6], answerlist.get(i).get_answerer());
+            writeDataOnCSV(projectdata, userdata, ANSWER);
+        }
+        Toast.makeText(QuestionFormListActivity.this, "Done", Toast.LENGTH_SHORT).show();
+
+        Intent intent = new Intent(QuestionFormListActivity.this, CSVListActivity.class);
+        intent.putExtra("form_description", selectedData.get_formDescription());
+        intent.putExtra("project_name", proj_name);
+        startActivity(intent);
+
+    }
+
+
+    private void sdCardHandler(ProjectFormData projectdata, UserData userdata) {
+        // SD Card path
+        File root = android.os.Environment.getExternalStorageDirectory();
+        File mainDirect = new File(root.getAbsolutePath() + "/FHSurvey");
+
+        //File directory = QuestionFormListActivity.this.getDir("FHSurvey", Context.MODE_PRIVATE);
+
+        // If Directory not exist then create
+        if (!mainDirect.exists())
+            if (!mainDirect.mkdir()){
+                Toast.makeText(QuestionFormListActivity.this, "Cannot access SDCard!", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+        File submainDir = new File(mainDirect.getAbsolutePath() + "/" + projectdata.get_formDescription() + "(" + proj_name + ")");
+
+        if(!submainDir.exists())
+            if(!submainDir.mkdir()){
+                Toast.makeText(QuestionFormListActivity.this, "Cannot access SDCard!", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+        // Here we are creating CSV file on SD Card666666666666665
+        desFile = new File(submainDir + "/" + proj_name + "-" + projectdata.get_formDescription() + "-" + userdata.get_username() + "-" + userdata.get_timestamp() + ".csv");
+
+
+        if (!desFile.exists()) {
+            // Here only i check if the file is already exist than we not write
+            // header of CSV vice versa we write CSV Header
+            isAlreadyExist = true;
+        }
+
+        addData(projectdata, userdata);
+
+    }
+
+
+    /*"UserID": "F874F585-DE2F-4D97-98F6-A111431DFBDE",
+            "QuestionID": "F874F585-DE2F-4D97-98F6-A111431DFBDE",
+            "AnswerDescription": "How are U?",
+            "AnswerID": "00000000-0000-0000-0000-000000000000",
+            "AnswerColumnID" : "00000000-0000-0000-0000-000000000000",
+            "UploadBy": "F874F585-DE2F-4D97-98F6-A111431DFBDE"*/
+
+    private void writeDataOnCSV(ProjectFormData projectdata, UserData userdata, HashMap<String, Object> ANSWER) {
+
+
+        ICsvMapWriter mapWriter = null;
+        try {
+            mapWriter = new CsvMapWriter(new FileWriter(desFile, true),
+                    CsvPreference.STANDARD_PREFERENCE);
+
+            final CellProcessor[] processors = getProcessors();
+
+            // write the header
+            if (isAlreadyExist)
+                mapWriter.writeHeader(CSV_HEADER);
+
+
+            mapWriter.write(ANSWER, CSV_HEADER, processors);
+
+            //TODO check file is exist or not if exist return true, or return false
+            AnswerDataORM.deleteDataFromTable(QuestionFormListActivity.this, projectdata.get_formID(), userdata.get_timestamp());
+
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } finally {
+            if (mapWriter != null) {
+                try {
+                    mapWriter.close();
+                } catch (IOException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+    // CSV related functions
+
+
+    // This function tell to CSV Writer about cell constraints. Like here we say
+    // CSV Writer the FirstName is compulsory, Email is optional.
+
+
+    private CellProcessor[] getProcessors() {
+
+        final CellProcessor[] processors = new CellProcessor[] {
+                new Optional(),//userid
+                new Optional(),//questionid
+                new Optional(),//answerdescription
+                new Optional(),//answerid
+                new Optional(),//answercolumnid
+                new Optional(),//uploadby
+                new Optional()//answerer
+        };
+        return processors;
+    }
+
 
 }

@@ -16,4 +16,9 @@ public class APIConfig {
     public static final String SIGN_IN = "/api/Project/GetCheckLogIn/{userid}/{password}";
 
     public static final String REGISTER_TO_SERVER = "/auth/";
+
+    public static final String FILE_UPLOAD = "/api/Project/UploadMultipleFiles2";
+
+    public static final String SINGLE_FILE_UPLOAD = "/api/Project/UploadSingleFile";
+
 }

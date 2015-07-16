@@ -5,9 +5,7 @@ import android.graphics.Typeface;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
-import android.text.Editable;
 import android.text.TextUtils;
-import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
@@ -109,7 +107,7 @@ public class AnswerActivity extends ActionBarActivity implements View.OnClickLis
             answerData.set_ColumnDescription(data.get_ColumnDescription());
             answerData.set_AnswerColumnIndex(data.get_AnswerColumnIndex());
             answerData.set_timestamp(String.valueOf(answertimestamp));
-            answerData.set_username(username);
+            answerData.set_answerer(username);
 
             datalist.add(answerData);
 
@@ -639,8 +637,10 @@ public class AnswerActivity extends ActionBarActivity implements View.OnClickLis
                 templist.remove(pos);
                 if(isChecked){
                     data.set_IS_ACTIVE("true");
+                    data.set_VALUE("true");
                 }else{
                     data.set_IS_ACTIVE("false");
+                    data.set_VALUE("false");
                 }
                 templist.add(pos, data);
                 answerlist.remove(k);

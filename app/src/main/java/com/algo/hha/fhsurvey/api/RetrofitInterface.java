@@ -5,16 +5,25 @@
 package com.algo.hha.fhsurvey.api;
 
 
+import com.squareup.okhttp.Call;
+
+import java.util.Map;
+
 import retrofit.Callback;
 import retrofit.http.DELETE;
 import retrofit.http.Field;
 import retrofit.http.FormUrlEncoded;
 import retrofit.http.GET;
 import retrofit.http.Header;
+import retrofit.http.Multipart;
 import retrofit.http.POST;
 import retrofit.http.PUT;
+import retrofit.http.Part;
+import retrofit.http.PartMap;
 import retrofit.http.Path;
 import retrofit.http.Query;
+import retrofit.mime.TypedFile;
+import retrofit.mime.TypedString;
 
 public interface RetrofitInterface
 {
@@ -36,6 +45,15 @@ public interface RetrofitInterface
     @FormUrlEncoded
     @POST(APIConfig.REGISTER_TO_SERVER)
     public void registerToServer(@Field("name") String name, @Field("contact_number") String contactno, @Field("email") String email, @Field("password") String pwd, @Field("password_confirmation") String pwd_conf, Callback<String> callback);
+
+    @Multipart
+    @POST(APIConfig.FILE_UPLOAD)
+    public void uploadFilesToServer(@Part("user_id") TypedString user_id,
+                                    @PartMap Map<String,TypedFile> Files, Callback<String> callback);
+
+    @Multipart
+    @POST(APIConfig.SINGLE_FILE_UPLOAD)
+    public void uploadSingleFileToServer(@Part("fileUpload1") TypedFile typefile, Callback<String> callback);
 
 }
 

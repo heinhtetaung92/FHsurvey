@@ -28,8 +28,10 @@ public class AnswerData {
     private String _AnswerColumnID;
     private String _ColumnDescription;
     private String _AnswerColumnIndex;
+
+    private String _userid;
     private String _timestamp;
-    private String _username;
+    private String _answerer;
 
     //new added fields
     private String _IS_ACTIVE;
@@ -243,11 +245,19 @@ public class AnswerData {
         this._timestamp = _timestamp;
     }
 
-    public String get_username() {
-        return _username;
+    public String get_answerer() {
+        return _answerer;
     }
 
-    public void set_username(String _username) {
-        this._username = _username;
+    public void set_answerer(String _answerer) {
+        this._answerer = _answerer;
+    }
+
+    public String get_userid() {
+        return _userid;
+    }
+
+    public void set_userid(String _userid) {
+        this._userid = _userid;
     }
 }

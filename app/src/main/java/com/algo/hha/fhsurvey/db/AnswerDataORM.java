@@ -5,10 +5,8 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
-import android.widget.ArrayAdapter;
 
 import com.algo.hha.fhsurvey.model.AnswerData;
-import com.algo.hha.fhsurvey.model.QuestionFormData;
 import com.algo.hha.fhsurvey.model.UserData;
 
 import java.util.ArrayList;
@@ -242,9 +240,30 @@ public class AnswerDataORM {
         values.put(COLUMN_IS_ACTIVE, data.get_IS_ACTIVE());
         values.put(COLUMN_VALUE, data.get_VALUE());
         values.put(COLUMN_TIMESTAMP, data.get_timestamp());
-        values.put(COLUMN_USERNAME, data.get_username());
+        values.put(COLUMN_USERNAME, data.get_answerer());
 
         return values;
+    }
+
+    public static List<AnswerData> getAnswerDatalist(Context context, String form_id) {
+        SQLiteHelper dbHelper = new SQLiteHelper(context);
+        SQLiteDatabase database = dbHelper.getReadableDatabase();
+
+        Cursor cursor = database.rawQuery("SELECT * FROM "
+                + TABLE_NAME + " WHERE " + COLUMN_FORMID + "=?", new String[]{form_id});
+        List<AnswerData> providerList = new ArrayList<AnswerData>();
+        if (cursor.getCount() > 0) {
+            cursor.moveToFirst();
+            while (!cursor.isAfterLast()) {
+                AnswerData dOrg = cursorToObject(cursor);
+                providerList.add(dOrg);
+                cursor.moveToNext();
+            }
+        }
+        cursor.close();
+        database.close();
+        dbHelper.close();
+        return providerList;
     }
 
 
@@ -269,12 +288,58 @@ public class AnswerDataORM {
         return providerList;
     }
 
+    public static List<AnswerData> getOnlyAnswerDatalist(Context context, String form_id, String timestamp) {
+        SQLiteHelper dbHelper = new SQLiteHelper(context);
+        SQLiteDatabase database = dbHelper.getReadableDatabase();
+
+        Cursor cursor = database.rawQuery("SELECT * FROM "
+                + TABLE_NAME + " WHERE " + COLUMN_FORMID + "=? AND " + COLUMN_TIMESTAMP + "=? AND " + COLUMN_IS_ACTIVE + "=?", new String[]{form_id, timestamp, "true"});
+        List<AnswerData> providerList = new ArrayList<AnswerData>();
+        if (cursor.getCount() > 0) {
+            cursor.moveToFirst();
+            while (!cursor.isAfterLast()) {
+                AnswerData dOrg = cursorToObject(cursor);
+                providerList.add(dOrg);
+                cursor.moveToNext();
+            }
+        }
+        cursor.close();
+        database.close();
+        dbHelper.close();
+        return providerList;
+    }
+
     public static List<UserData> getAnswerTimeStampList(Context context, String form_id){
         SQLiteHelper dbHelper = new SQLiteHelper(context);
         SQLiteDatabase database = dbHelper.getReadableDatabase();
 
         Cursor cursor = database.rawQuery("SELECT DISTINCT " + COLUMN_TIMESTAMP + "," + COLUMN_USERNAME + " FROM "
                 + TABLE_NAME + " WHERE " + COLUMN_FORMID + "=?", new String[]{form_id});
+        List<UserData> providerList = new ArrayList<>();
+        if (cursor.getCount() > 0) {
+            cursor.moveToFirst();
+            while (!cursor.isAfterLast()) {
+
+                UserData data = new UserData();
+                data.set_username(cursor.getString(cursor.getColumnIndex(COLUMN_USERNAME)));
+                data.set_timestamp(cursor.getString(cursor.getColumnIndex(COLUMN_TIMESTAMP)));
+
+                providerList.add(data);
+                cursor.moveToNext();
+            }
+        }
+        cursor.close();
+        database.close();
+        dbHelper.close();
+        return providerList;
+    }
+
+    public static List<UserData> getAnswerTimeStampList(Context context, String form_id, String proj_id){
+        SQLiteHelper dbHelper = new SQLiteHelper(context);
+        SQLiteDatabase database = dbHelper.getReadableDatabase();
+
+        Cursor cursor = database.rawQuery("SELECT DISTINCT " + COLUMN_TIMESTAMP + "," + COLUMN_USERNAME + " FROM "
+                + TABLE_NAME + " WHERE " + COLUMN_FORMID + "=? AND " + COLUMN_PROJECTID + "=?", new String[]{form_id, proj_id});
         List<UserData> providerList = new ArrayList<>();
         if (cursor.getCount() > 0) {
             cursor.moveToFirst();
@@ -329,7 +394,7 @@ public class AnswerDataORM {
         provider.set_IS_ACTIVE(cursor.getString(cursor.getColumnIndex(COLUMN_IS_ACTIVE)));
         provider.set_VALUE(cursor.getString(cursor.getColumnIndex(COLUMN_VALUE)));
         provider.set_timestamp(cursor.getString(cursor.getColumnIndex(COLUMN_TIMESTAMP)));
-        provider.set_username(cursor.getString(cursor.getColumnIndex(COLUMN_USERNAME)));
+        provider.set_answerer(cursor.getString(cursor.getColumnIndex(COLUMN_USERNAME)));
 
         return provider;
     }

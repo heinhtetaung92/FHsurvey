@@ -9,7 +9,7 @@
     <string name="title_activity_answer">AnswerActivity</string>
     <string name="title_activity_answer_list">AnswerListActivity</string>
     <string name="title_activity_view_answer">ViewAnswerActivity</string>
-
     <string name="temp_id">temp_id</string>
+    <string name="title_activity_csvlist">CSVListActivity</string>
 
 </resources>
