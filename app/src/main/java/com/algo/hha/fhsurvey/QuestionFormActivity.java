@@ -1,45 +1,32 @@
 package com.algo.hha.fhsurvey;
 
 import android.graphics.Typeface;
-import android.os.Handler;
-import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
+import android.support.v7.app.ActionBarActivity;
 import android.support.v7.widget.Toolbar;
+import android.text.InputType;
+import android.text.TextUtils;
 import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AbsListView;
-import android.widget.AdapterView;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.HorizontalScrollView;
 import android.widget.LinearLayout;
-import android.widget.ListView;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.ScrollView;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import com.algo.hha.fhsurvey.api.RetrofitAPI;
 import com.algo.hha.fhsurvey.configuration.AnswerType;
 import com.algo.hha.fhsurvey.db.QuestionFormDataORM;
 import com.algo.hha.fhsurvey.model.QuestionFormData;
 import com.wdullaer.materialdatetimepicker.date.DatePickerDialog;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
-
-import retrofit.Callback;
-import retrofit.RetrofitError;
-import retrofit.client.Response;
 
 /***
  * This is to show the add new answer for the survey
@@ -353,6 +340,7 @@ public class QuestionFormActivity extends ActionBarActivity implements DatePicke
         }else{
             String answerTypeDesc = itemlist.get(0).get_AnswerTypeDescription();
 
+
             if(itemlist.get(0).get_ColumnDescription() != null){
                 return createTableWithValue(position, dl);
             }
@@ -360,9 +348,174 @@ public class QuestionFormActivity extends ActionBarActivity implements DatePicke
                 return createSingleChoiceAnswer(position, dl);
             }else if(answerTypeDesc.equals(AnswerType.TEXT)){//its type is Text type
                 return createTextInputAnswer(position, dl);
+            }else if(answerTypeDesc.equals(AnswerType.DATE)){
+                return createDateTextInputAnswer(position, dl);
+            }else if (answerTypeDesc.equals(AnswerType.MULTI_CHOICE)){
+                return createMultiChoiceAnswer(position, dl);
+            }else if(answerTypeDesc.equals(AnswerType.NUMBER)){
+                return createNumberInputAnswer(position, dl);
             }
         }
         return null;
+    }
+
+    /***
+     * this method create EditText with title
+     * @param position
+     * list's position to get data
+     * @return view
+     * to use as listview's item
+     */
+
+    private View createNumberInputAnswer(final int position, List<List<QuestionFormData>> dl){
+
+        final List<QuestionFormData> itemlist = dl.get(position);
+
+        //crate linearlayout as main layout
+        LinearLayout linearLayout = new LinearLayout(this);
+        //set layout param of abslistview
+        LinearLayout.LayoutParams param = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        param.setMargins(8, 8, 8, 8);
+        linearLayout.setLayoutParams(param);
+
+        //set orientation
+        linearLayout.setOrientation(LinearLayout.VERTICAL);
+
+        /*//add group title textview to layout
+        TextView tv_answer_grouptitle = new TextView(this);
+        LinearLayout.LayoutParams grouptitle_param = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        grouptitle_param.setMargins(16, 16, 16, 16);
+        tv_answer_grouptitle.setLayoutParams(grouptitle_param);
+
+        tv_answer_grouptitle.setText(itemlist.get(0).get_QuestionGroupDescription());
+        tv_answer_grouptitle.setTextSize(18);
+        tv_answer_grouptitle.setTextColor(getResources().getColor(android.R.color.white));
+        tv_answer_grouptitle.setPadding(16, 16, 16, 16);
+        tv_answer_grouptitle.setBackgroundColor(getResources().getColor(R.color.pink_500));
+        tv_answer_grouptitle.setTypeface(null, Typeface.BOLD);
+        linearLayout.addView(tv_answer_grouptitle);*/
+
+        //create title(Question) for edittext
+        TextView tv_answer_title = new TextView(this);
+        LinearLayout.LayoutParams title_param = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        title_param.setMargins(16, 16, 16, 16);
+        tv_answer_title.setLayoutParams(title_param);
+
+        if(itemlist.get(0).get_QuestionShortCode() !=  null) {
+            if (TextUtils.isEmpty(itemlist.get(0).get_QuestionShortCode())) {
+                tv_answer_title.setText(itemlist.get(0).get_QuestionDescription());
+            } else {
+                tv_answer_title.setText(itemlist.get(0).get_QuestionShortCode() + ". " + itemlist.get(0).get_QuestionDescription());
+            }
+        }else{
+            tv_answer_title.setText(itemlist.get(0).get_QuestionDescription());
+        }
+
+        tv_answer_title.setTextSize(18);
+        tv_answer_title.setTypeface(null, Typeface.BOLD);
+        linearLayout.addView(tv_answer_title);
+
+        //add instruction view to layout
+        if(itemlist.get(0).get_QuestionInstruction() != null) {
+            TextView tv_answer_instruction = new TextView(this);
+            LinearLayout.LayoutParams instruction_param = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            instruction_param.setMargins(16, 16, 16, 16);
+            tv_answer_instruction.setLayoutParams(title_param);
+
+            tv_answer_instruction.setText(itemlist.get(0).get_QuestionInstruction());
+            tv_answer_instruction.setTextSize(18);
+            linearLayout.addView(tv_answer_instruction);
+        }
+
+        //create edittext as requirement
+        final EditText editText = new EditText(this);
+        LinearLayout.LayoutParams editText_param = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        title_param.setMargins(8, 8, 8, 8);
+        editText.setSingleLine();
+        editText.setLayoutParams(editText_param);
+        editText.setEms(10);
+        editText.setTag(itemlist.get(0));
+        editText.setEnabled(false);         editText.setFocusable(false);
+        editText.setInputType(InputType.TYPE_CLASS_NUMBER);
+
+
+        linearLayout.addView(editText);
+
+        return linearLayout;
+    }
+
+    /***
+     * this method create a view with radio button data from server
+     * @param position
+     * list's position to get data
+     * @return view
+     * to use as listview's item
+     */
+    private View createMultiChoiceAnswer(int position, List<List<QuestionFormData>> dl){
+        List<QuestionFormData> itemlist = dl.get(position);
+
+
+
+        //crate linearlayout as main layout
+        LinearLayout linearLayout = new LinearLayout(this);
+        //set layout param of abslistview
+        LinearLayout.LayoutParams param = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        param.setMargins(8, 8, 8, 8);
+        linearLayout.setLayoutParams(param);
+        //set orientation
+        linearLayout.setOrientation(LinearLayout.VERTICAL);
+
+
+        //add title textview to layout
+        TextView tv_answer_title = new TextView(this);
+        LinearLayout.LayoutParams title_param = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        title_param.setMargins(16, 16, 16, 16);
+        tv_answer_title.setLayoutParams(title_param);
+
+        if(itemlist.get(0).get_QuestionShortCode() !=  null) {
+            if (TextUtils.isEmpty(itemlist.get(0).get_QuestionShortCode())) {
+                tv_answer_title.setText(itemlist.get(0).get_QuestionDescription());
+            } else {
+                tv_answer_title.setText(itemlist.get(0).get_QuestionShortCode() + ". " + itemlist.get(0).get_QuestionDescription());
+            }
+        }else{
+            tv_answer_title.setText(itemlist.get(0).get_QuestionDescription());
+        }
+
+        tv_answer_title.setTextSize(18);
+        tv_answer_title.setTypeface(null, Typeface.BOLD);
+        linearLayout.addView(tv_answer_title);
+
+        //add instruction view to layout
+        if(itemlist.get(0).get_QuestionInstruction() != null) {
+            TextView tv_answer_instruction = new TextView(this);
+            LinearLayout.LayoutParams instruction_param = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            instruction_param.setMargins(16, 16, 16, 16);
+            tv_answer_instruction.setLayoutParams(title_param);
+
+            tv_answer_instruction.setText(itemlist.get(0).get_QuestionInstruction());
+            tv_answer_instruction.setTextSize(18);
+            linearLayout.addView(tv_answer_instruction);
+        }
+
+        /*//create radio group for all radio buttons
+        RadioGroup rd_group = new RadioGroup(this);
+        LinearLayout.LayoutParams rd_group_param = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        rd_group_param.setMargins(16, 16, 16, 16);
+        rd_group.setLayoutParams(rd_group_param);*/
+
+        //this loop create radio button per data count
+        for(int i=0;i<itemlist.size();i++){
+            CheckBox checkbox = new CheckBox(this);
+            checkbox.setTag(itemlist.get(i));
+            checkbox.setText(itemlist.get(i).get_AnswerDescription());
+            //rd_group.addView(radioButton);
+            linearLayout.addView(checkbox);
+
+        }
+
+
+        return linearLayout;
     }
 
     private View createGroupTitleTextView(QuestionFormData data){
@@ -436,13 +589,97 @@ public class QuestionFormActivity extends ActionBarActivity implements DatePicke
             radioButton.setText(itemlist.get(i).get_AnswerDescription());
             rd_group.addView(radioButton);
 
-            radioButton.setFocusable(false);
             radioButton.setEnabled(false);
             //checked first item(default)
             /*if(i == 0)
                 radioButton.setChecked(true);*/
         }
         linearLayout.addView(rd_group);
+
+        return linearLayout;
+    }
+
+    /***
+     * this method create EditText with title
+     * @param position
+     * list's position to get data
+     * @return view
+     * to use as listview's item
+     */
+
+    private View createDateTextInputAnswer(final int position, List<List<QuestionFormData>> dl){
+
+        final List<QuestionFormData> itemlist = dl.get(position);
+
+        //crate linearlayout as main layout
+        LinearLayout linearLayout = new LinearLayout(this);
+        //set layout param of abslistview
+        LinearLayout.LayoutParams param = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        param.setMargins(8, 8, 8, 8);
+        linearLayout.setLayoutParams(param);
+
+        //set orientation
+        linearLayout.setOrientation(LinearLayout.VERTICAL);
+
+        /*//add group title textview to layout
+        TextView tv_answer_grouptitle = new TextView(this);
+        LinearLayout.LayoutParams grouptitle_param = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        grouptitle_param.setMargins(16, 16, 16, 16);
+        tv_answer_grouptitle.setLayoutParams(grouptitle_param);
+
+        tv_answer_grouptitle.setText(itemlist.get(0).get_QuestionGroupDescription());
+        tv_answer_grouptitle.setTextSize(18);
+        tv_answer_grouptitle.setTextColor(getResources().getColor(android.R.color.white));
+        tv_answer_grouptitle.setPadding(16, 16, 16, 16);
+        tv_answer_grouptitle.setBackgroundColor(getResources().getColor(R.color.pink_500));
+        tv_answer_grouptitle.setTypeface(null, Typeface.BOLD);
+        linearLayout.addView(tv_answer_grouptitle);*/
+
+        //create title(Question) for edittext
+        TextView tv_answer_title = new TextView(this);
+        LinearLayout.LayoutParams title_param = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        title_param.setMargins(16, 16, 16, 16);
+        tv_answer_title.setLayoutParams(title_param);
+
+        if(itemlist.get(0).get_QuestionShortCode() !=  null) {
+            if (TextUtils.isEmpty(itemlist.get(0).get_QuestionShortCode())) {
+                tv_answer_title.setText(itemlist.get(0).get_QuestionDescription());
+            } else {
+                tv_answer_title.setText(itemlist.get(0).get_QuestionShortCode() + ". " + itemlist.get(0).get_QuestionDescription());
+            }
+        }else{
+            tv_answer_title.setText(itemlist.get(0).get_QuestionDescription());
+        }
+
+        tv_answer_title.setTextSize(18);
+        tv_answer_title.setTypeface(null, Typeface.BOLD);
+        linearLayout.addView(tv_answer_title);
+
+        //add instruction view to layout
+        if(itemlist.get(0).get_QuestionInstruction() != null) {
+            TextView tv_answer_instruction = new TextView(this);
+            LinearLayout.LayoutParams instruction_param = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            instruction_param.setMargins(16, 16, 16, 16);
+            tv_answer_instruction.setLayoutParams(title_param);
+
+            tv_answer_instruction.setText(itemlist.get(0).get_QuestionInstruction());
+            tv_answer_instruction.setTextSize(18);
+            linearLayout.addView(tv_answer_instruction);
+        }
+
+        //create edittext as requirement
+        final EditText editText = new EditText(this);
+        LinearLayout.LayoutParams editText_param = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        title_param.setMargins(8, 8, 8, 8);
+        editText.setSingleLine();
+        editText.setLayoutParams(editText_param);
+        editText.setEms(10);
+        editText.setTag(itemlist.get(0));
+
+
+        editText.setEnabled(false);         editText.setFocusable(false);
+
+        linearLayout.addView(editText);
 
         return linearLayout;
     }
@@ -499,6 +736,7 @@ public class QuestionFormActivity extends ActionBarActivity implements DatePicke
         editText.setSingleLine();
         editText.setLayoutParams(editText_param);
         editText.setEms(10);
+        editText.setEnabled(false);
         editText.setFocusable(false);
         /*editText.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -583,10 +821,10 @@ public class QuestionFormActivity extends ActionBarActivity implements DatePicke
             textView.setPadding( 8, 8, 8, 8);
             if(i == 0){
                 textView.setText("");
-                titletextparam = new LinearLayout.LayoutParams(400, ViewGroup.LayoutParams.MATCH_PARENT);
+                titletextparam = new LinearLayout.LayoutParams(300, ViewGroup.LayoutParams.MATCH_PARENT);
             }else{
                 textView.setText(itemlist.get(i-1).get_ColumnDescription());
-                titletextparam = new LinearLayout.LayoutParams(350, ViewGroup.LayoutParams.MATCH_PARENT);
+                titletextparam = new LinearLayout.LayoutParams(200, ViewGroup.LayoutParams.MATCH_PARENT);
             }
             textView.setLayoutParams(titletextparam);
 
@@ -609,7 +847,7 @@ public class QuestionFormActivity extends ActionBarActivity implements DatePicke
 
             //add textview for answer description that shows in frist column
             TextView textView = new TextView(QuestionFormActivity.this);
-            LinearLayout.LayoutParams valuetextparam = new LinearLayout.LayoutParams(400, ViewGroup.LayoutParams.MATCH_PARENT);
+            LinearLayout.LayoutParams valuetextparam = new LinearLayout.LayoutParams(300, ViewGroup.LayoutParams.MATCH_PARENT);
             textView.setLayoutParams(valuetextparam);
             textView.setText(itemlist.get(i).get_AnswerDescription());
             textView.setPadding( 8, 8, 8, 8);
@@ -644,10 +882,10 @@ public class QuestionFormActivity extends ActionBarActivity implements DatePicke
     private View getEditTextView(){
 
         EditText editText = new EditText(QuestionFormActivity.this);
-        LinearLayout.LayoutParams valuetextparam = new LinearLayout.LayoutParams(350, ViewGroup.LayoutParams.WRAP_CONTENT);
+        LinearLayout.LayoutParams valuetextparam = new LinearLayout.LayoutParams(200, ViewGroup.LayoutParams.WRAP_CONTENT);
         editText.setLayoutParams(valuetextparam);
         editText.setSingleLine();
-        editText.setFocusable(false);
+        editText.setEnabled(false);         editText.setFocusable(false);
         editText.setBackgroundResource(R.drawable.background_tabletextview);
 
         return editText;

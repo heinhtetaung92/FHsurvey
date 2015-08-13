@@ -155,8 +155,10 @@ public class AnswerDataORM {
         SQLiteDatabase database = dbHelper.getWritableDatabase();
         try {
 
-            /*if(QuestionFormDataList.size() > 0)//check data size is more than one
-                deleteDataFromTable(context, QuestionFormDataList.get(0).get(0).get_FormID());//delete data from table where formid is equal*/
+
+
+            /*if(QuestionFormDataList.size() > 0)//check data size is more than one;//delete data from table where formid is equal*/
+                deleteDataFromTable(context, QuestionFormDataList.get(0).get(0).get_FormID(), QuestionFormDataList.get(0).get(0).get_timestamp());
 
             for(int i=0;i<QuestionFormDataList.size();i++) {
                 List<AnswerData> dl = QuestionFormDataList.get(i);
@@ -423,5 +425,22 @@ public class AnswerDataORM {
         database.close();
         dbHelper.close();
     }
+    public static boolean isAnswererAlreadyIn(Context context, String s, String form_id, String proj_id)
+    {
+        SQLiteHelper sqLiteHelper = new SQLiteHelper(context);
+        SQLiteDatabase sqlitedatabase = sqLiteHelper.getReadableDatabase();
+        Cursor cursor = sqlitedatabase.rawQuery("SELECT DISTINCT username FROM answerdata WHERE " +COLUMN_USERNAME + "=? AND " + COLUMN_FORMID + " =? AND " + COLUMN_PROJECTID + "=?", new String[] {s, form_id, proj_id});
+        if (cursor.getCount() > 0)
+        {
+            return true;
+        } else
+        {
+            cursor.close();
+            sqlitedatabase.close();
+            cursor.close();
+            return false;
+        }
+    }
+
 
 }

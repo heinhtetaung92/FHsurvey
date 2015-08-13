@@ -8,6 +8,7 @@ import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.support.v7.app.ActionBarActivity;
 import android.text.TextUtils;
 import android.util.Log;
@@ -81,14 +82,24 @@ public class RegisterActivity extends ActionBarActivity
             {
                 vh = (ViewHolder)view.getTag();
             }
-            if ((mImageList.get(i)).contains("/storage"))
-            {
+            Log.i("Image url", mImageList.get(i));
+
+            if (mImageList.get(i).contains("/storage")) {
+
                 Uri uri = Uri.fromFile(new File(mImageList.get(i)));
-                Picasso.with(RegisterActivity.this).load(uri).resize(512, 512).centerCrop().into(vh.imageView);
-            } else
-            {
-                Picasso.with(RegisterActivity.this).load(mImageList.get(i)).into(vh.imageView);
+
+                Picasso.with(RegisterActivity.this)
+                        .load(uri)
+                        .resize(512, 512)
+                        .centerCrop()
+                        .into(vh.imageView);
+            } else {
+
+                Picasso.with(RegisterActivity.this)
+                        .load(mImageList.get(i))
+                        .into(vh.imageView);
             }
+
             return view;
         }
 
@@ -122,27 +133,51 @@ public class RegisterActivity extends ActionBarActivity
         progress_background.setVisibility(View.INVISIBLE);
     }
 
-    private List<String> getListofImage()
-    {
-        List<String> arraylist = new ArrayList();
-        Object obj = android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
-        Cursor cursor = getContentResolver().query(((Uri) (obj)), new String[] {
-            "_data"
-        }, null, null, null);
-        Log.i("ListingImages", (new StringBuilder()).append(" query count=").append(cursor.getCount()).toString());
-        if (cursor.moveToFirst())
-        {
-            int i = cursor.getColumnIndexOrThrow("_data");
-            do
-            {
-                cursor.getString(i);
+    private List<String> getListofImage() {
+       /* String[] projection = new String[]{
+                MediaStore.Images.Media._ID,
+                MediaStore.Images.Media.BUCKET_DISPLAY_NAME,
+                MediaStore.Images.Media.DATE_TAKEN,
+                MediaStore.Images.Media.EXTERNAL_CONTENT_URI.toString()
 
-                arraylist.add(cursor.getString(i));
-            } while (cursor.moveToNext());
+
+        };*/
+
+        List<String> imgList = new ArrayList<>();
+
+        String[] projection = {MediaStore.Images.Media.DATA};
+
+        // content:// style URI for the "primary" external storage volume
+        Uri images = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
+
+        // Make the query.
+        Cursor cur = getContentResolver().query(images,
+                projection, // Which columns to return
+                null,       // Which rows to return (all rows)
+                null,       // Selection arguments (none)
+                null        // Ordering
+        );
+
+        Log.i("ListingImages", " query count=" + cur.getCount());
+
+        if (cur.moveToFirst()) {
+
+            int column_index = cur.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
+
+            do {
+                // Get the field values
+                cur.getString(column_index);
+
+                // Do something with the values.
+                Log.i("ListingImages", " bucket=" + cur.getString(column_index)
+                        + "  date_taken=" + "");
+                imgList.add(cur.getString(column_index));
+            } while (cur.moveToNext());
+
         }
-        return arraylist;
-    }
 
+        return imgList;
+    }
     private void registerToServer(String s, String s1, String s2, String s3, String s4, String s5)
     {
         byte abyte0[] = new byte[0];

@@ -222,7 +222,7 @@ public class LoginActivity extends ActionBarActivity implements View.OnClickList
 
             public void onPositive(MaterialDialog materialdialog1)
             {
-                EditText edittext = (EditText)materialdialog1.findViewById(R.id.custom_dialog_changeroute_et);
+                EditText edittext = (EditText)materialdialog1.findViewById(R.id.customdialog_changeroute);
                 android.content.SharedPreferences.Editor editor = sPref.edit();
                 editor.putString(Config.SERVER_ROUTE, edittext.getText().toString());
                 editor.commit();
@@ -231,7 +231,7 @@ public class LoginActivity extends ActionBarActivity implements View.OnClickList
 
         }).build();
 
-        ((EditText)materialdialog.findViewById(R.id.custom_dialog_changeroute_et)).setText(sPref.getString(Config.SERVER_ROUTE, "http://fhsurvey.osakaohshomyanmar.com"));
+        ((EditText)materialdialog.findViewById(R.id.customdialog_changeroute)).setText(sPref.getString(Config.SERVER_ROUTE, "http://fhsurvey.osakaohshomyanmar.com"));
         materialdialog.show();
     }
 

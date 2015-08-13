@@ -295,6 +295,7 @@ public class QuestionFormListActivity extends ActionBarActivity implements Adapt
                 Intent answerintent = new Intent(QuestionFormListActivity.this, AnswerActivity.class);
                 answerintent.putExtra("form_id", selectedData.get_formID());
                 answerintent.putExtra("form_description", selectedData.get_formDescription());
+                answerintent.putExtra("proj_id", selectedData.get_projectID());
                 startActivity(answerintent);
                 Toast.makeText(QuestionFormListActivity.this, "View Questions", Toast.LENGTH_SHORT).show();
 

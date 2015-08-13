@@ -9,11 +9,14 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.afollestad.materialdialogs.MaterialDialog;
 import com.algo.hha.fhsurvey.adapter.ProjectListAdapter;
+import com.algo.hha.fhsurvey.api.APIConfig;
 import com.algo.hha.fhsurvey.api.RetrofitAPI;
 import com.algo.hha.fhsurvey.db.ProjectDataORM;
 import com.algo.hha.fhsurvey.model.ProjectData;
@@ -203,7 +206,7 @@ public class MainActivity extends ActionBarActivity implements AdapterView.OnIte
     public boolean onCreateOptionsMenu(Menu menu) {
 
         MenuItem item = menu.add(0, 1000, 100, "LogOut");
-        item.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
+        MenuItem item1 = menu.add(0, 1001, 101, "Change Route");
 
         return super.onCreateOptionsMenu(menu);
     }
@@ -212,8 +215,35 @@ public class MainActivity extends ActionBarActivity implements AdapterView.OnIte
     public boolean onOptionsItemSelected(MenuItem item) {
         if(item.getItemId() == 1000){
             logOut();
+        }else if(item.getItemId() == 1001){
+            showDialogForChangingRoute();
         }
 
         return super.onOptionsItemSelected(item);
     }
+    public void showDialogForChangingRoute()
+    {
+        final SharedPreferences sPref = getSharedPreferences(Config.APP_PREFERENCE, 0);
+        MaterialDialog materialdialog = (new com.afollestad.materialdialogs.MaterialDialog.Builder(this)).title("Change route").customView(R.layout.custom_dialog_changeroute, false).positiveText("Change").positiveColorRes(R.color.colorPrimary).negativeText("Cancel").negativeColorRes(R.color.grey_500).autoDismiss(false).callback(new com.afollestad.materialdialogs.MaterialDialog.ButtonCallback() {
+
+            public void onNegative(MaterialDialog materialdialog1)
+            {
+                materialdialog1.dismiss();
+            }
+
+            public void onPositive(MaterialDialog materialdialog1)
+            {
+                EditText edittext = (EditText)materialdialog1.findViewById(R.id.customdialog_changeroute);
+                android.content.SharedPreferences.Editor editor = sPref.edit();
+                editor.putString(Config.SERVER_ROUTE, edittext.getText().toString());
+                editor.commit();
+                materialdialog1.dismiss();
+            }
+
+        }).build();
+        materialdialog.show();
+        ((EditText)materialdialog.findViewById(R.id.customdialog_changeroute)).setText(sPref.getString(Config.SERVER_ROUTE, APIConfig.BASE_URL));
+    }
+
+
 }

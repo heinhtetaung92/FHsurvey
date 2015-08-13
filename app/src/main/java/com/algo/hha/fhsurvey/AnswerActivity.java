@@ -57,6 +57,8 @@ public class AnswerActivity extends ActionBarActivity implements View.OnClickLis
 
     InputFilter filter;
 
+    String form_id = "", proj_id = "";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -84,6 +86,12 @@ public class AnswerActivity extends ActionBarActivity implements View.OnClickLis
         btn_next.setOnClickListener(this);
         btn_prev.setOnClickListener(this);
 
+        Bundle bundle = getIntent().getExtras();
+        position_track = new ArrayList<>();
+        if(bundle != null) {
+            form_id = bundle.getString("form_id");
+            proj_id = bundle.getString("proj_id");
+        }
 
         showDialogToAddUserName();
 
@@ -259,6 +267,8 @@ public class AnswerActivity extends ActionBarActivity implements View.OnClickLis
         if (( itemlist.get(0)).get_Condition().contains("Required"))
         {
             setEnabled(containAnswer(itemlist));
+        }else{
+            setEnabled(true);
         }
 
         //crate linearlayout as main layout
@@ -454,9 +464,11 @@ public class AnswerActivity extends ActionBarActivity implements View.OnClickLis
         final List<AnswerData> itemlist = dl.get(position);
 
 
-        if (((AnswerData) itemlist.get(0)).get_Condition().contains("Required"))
+        if ( itemlist.get(0).get_Condition().contains("Required"))
         {
             setEnabled(containAnswer(itemlist));
+        }else{
+            setEnabled(true);
         }
         //crate linearlayout as main layout
         LinearLayout linearLayout = new LinearLayout(this);
@@ -605,9 +617,11 @@ public class AnswerActivity extends ActionBarActivity implements View.OnClickLis
         final List<AnswerData> itemlist = dl.get(position);
 
 
-        if (((AnswerData) itemlist.get(0)).get_Condition().contains("Required"))
+        if ( itemlist.get(0).get_Condition().contains("Required"))
         {
             setEnabled(containAnswer(itemlist));
+        }else{
+            setEnabled(true);
         }
         //crate linearlayout as main layout
         LinearLayout linearLayout = new LinearLayout(this);
@@ -763,6 +777,8 @@ public class AnswerActivity extends ActionBarActivity implements View.OnClickLis
         {
             boolean isEnabled = isTableContainRequired(itemlist);
             setEnabled(!isEnabled);
+        }else{
+            setEnabled(true);
         }
 
         //crate linearlayout as main layout
@@ -999,6 +1015,10 @@ public class AnswerActivity extends ActionBarActivity implements View.OnClickLis
 
                     if (answerlist == null) return;
 
+                    if(position >= answerlist.size()){
+                        return;
+                    }
+
                     List<AnswerData> list = answerlist.get(position);
 
                     String skippedTo = "";
@@ -1183,6 +1203,10 @@ public class AnswerActivity extends ActionBarActivity implements View.OnClickLis
 
                         if (TextUtils.isEmpty(un)) {
                             Toast.makeText(AnswerActivity.this, "Please enter your name!", Toast.LENGTH_SHORT).show();
+                        }if (AnswerDataORM.isAnswererAlreadyIn(AnswerActivity.this, un, form_id, proj_id))
+                        {
+                            Toast.makeText(AnswerActivity.this, "Name is already used!", Toast.LENGTH_SHORT).show();
+                            return;
                         } else {
 
                             username = un;
@@ -1229,14 +1253,17 @@ public class AnswerActivity extends ActionBarActivity implements View.OnClickLis
 
     }
 
+
+
     private void startAnswerActivity(){
         Bundle bundle = getIntent().getExtras();
         position_track = new ArrayList<>();
         if(bundle != null){
-            String formId = bundle.getString("form_id");
-            if(formId != null){
+            form_id = bundle.getString("form_id");
+            proj_id = bundle.getString("proj_id");
+            if(form_id != null){
                 //getDataFromServer(formId);
-                answerlist = getDataFromDatabase(formId);
+                answerlist = getDataFromDatabase(form_id);
 
                 if(answerlist.size() > 0){
 
@@ -1283,6 +1310,8 @@ public class AnswerActivity extends ActionBarActivity implements View.OnClickLis
         if ( itemlist.get(0).get_Condition().contains("Required"))
         {
             setEnabled(containAnswer(itemlist));
+        }else{
+            setEnabled(true);
         }
 
         //crate linearlayout as main layout
@@ -1535,6 +1564,209 @@ public class AnswerActivity extends ActionBarActivity implements View.OnClickLis
             }
             return;
         } while (true);
+    }
+
+    public EditText getNumberEditText(List<AnswerData> itemlist){
+        //create edittext as requirement
+        final EditText editText = new EditText(this);
+        LinearLayout.LayoutParams editText_param = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        editText_param.setMargins(8, 8, 8, 8);
+        editText.setSingleLine();
+        editText.setLayoutParams(editText_param);
+        editText.setEms(10);
+        editText.setTag(itemlist.get(0));
+        editText.setOnFocusChangeListener(this);
+        editText.setInputType(InputType.TYPE_CLASS_NUMBER);
+
+        if(itemlist.get(0).get_IS_ACTIVE() != null) {
+            if (itemlist.get(0).get_IS_ACTIVE().equals("true")){
+                editText.setText(itemlist.get(0).get_VALUE());
+            }
+        }
+
+        if (itemlist.get(0).get_Condition() != null)
+        {
+            String validatevalue = "";
+            String s = itemlist.get(0).get_Condition();
+            if (s.contains("Required"))
+            {
+                String as[] = s.split("/");
+                validatevalue = s;
+                if (as.length > 1)
+                {
+                    validatevalue = as[0];
+                }
+            }
+            try
+            {
+                String[] list = validatevalue.split(":");
+                if (list[0].equals("Yes"))
+                {
+                    editText.setFilters(new InputFilter[] {
+                            filter, new android.text.InputFilter.LengthFilter(Integer.parseInt(list[2]))
+                    });
+                }
+            }
+            // Misplaced declaration of an exception variable
+            catch (Exception ex) { }
+        }
+
+        return editText;
+
+    }
+
+    public EditText getDateEditText(final List<AnswerData> itemlist){
+        final EditText editText = new EditText(this);
+        LinearLayout.LayoutParams editText_param = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        editText_param.setMargins(8, 8, 8, 8);
+        editText.setSingleLine();
+        editText.setLayoutParams(editText_param);
+        editText.setEms(10);
+        editText.setTag(itemlist.get(0));
+        editText.setOnFocusChangeListener(this);
+
+        if(itemlist.get(0).get_IS_ACTIVE() != null) {
+            if (itemlist.get(0).get_IS_ACTIVE().equals("true")){
+                editText.setText(itemlist.get(0).get_VALUE());
+            }
+        }
+
+        editText.setFocusable(false);
+        editText.setOnClickListener(new android.view.View.OnClickListener() {
+            public void onClick(View view)
+            {
+                showDatePickerDialog();
+                editText.setId(R.id.my_edit_text_1);
+            }
+
+        });
+
+        editText.addTextChangedListener(new TextWatcher() {
+            public void afterTextChanged(Editable editable)
+            {
+            }
+
+            public void beforeTextChanged(CharSequence charsequence, int j, int k, int l)
+            {
+            }
+
+            public void onTextChanged(CharSequence charsequence, int j, int k, int l)
+            {
+                if (( itemlist.get(0)).get_Condition().contains("Required"))
+                {
+                    if (TextUtils.isEmpty(charsequence))
+                    {
+                        setEnabled(false);
+                        return;
+                    } else
+                    {
+                        setEnabled(true);
+                        return;
+                    }
+                } else
+                {
+                    setEnabled(true);
+                    return;
+                }
+            }
+
+        });
+
+        return editText;
+    }
+
+    public EditText getTextEditText(List<AnswerData> itemlist){
+        final EditText editText = new EditText(this);
+        LinearLayout.LayoutParams editText_param = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        editText_param.setMargins(8, 8, 8, 8);
+        editText.setSingleLine();
+        editText.setLayoutParams(editText_param);
+        editText.setEms(10);
+        editText.setTag(itemlist.get(0));
+        editText.setOnFocusChangeListener(this);
+
+        if(itemlist.get(0).get_IS_ACTIVE() != null) {
+            if (itemlist.get(0).get_IS_ACTIVE().equals("true")){
+                editText.setText(itemlist.get(0).get_VALUE());
+            }
+        }
+
+        if (itemlist.get(0).get_Condition() != null)
+        {
+            String validatevalue = "";
+            String s = itemlist.get(0).get_Condition();
+            if (s.contains("Required"))
+            {
+                String as[] = s.split("/");
+                validatevalue = s;
+                if (as.length > 1)
+                {
+                    validatevalue = as[0];
+                }
+            }
+            try
+            {
+                String[] list = validatevalue.split(":");
+                if (list[0].equals("Yes"))
+                {
+                    editText.setFilters(new InputFilter[] {
+                            filter, new android.text.InputFilter.LengthFilter(Integer.parseInt(list[2]))
+                    });
+                }
+            }
+            // Misplaced declaration of an exception variable
+            catch (Exception ex) { }
+        }
+        return editText;
+    }
+
+    public View getRadioGroupForTable(List<AnswerData> itemlist){
+        //create radio group for all radio buttons
+        RadioGroup rd_group = new RadioGroup(this);
+        LinearLayout.LayoutParams rd_group_param = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        rd_group_param.setMargins(16, 16, 16, 16);
+        rd_group.setLayoutParams(rd_group_param);
+
+        //this loop create radio button per data count
+        for(int i=0;i<itemlist.size();i++){
+            RadioButton radioButton = new RadioButton(this);
+            radioButton.setTag(itemlist.get(i));
+            radioButton.setText(itemlist.get(i).get_AnswerDescription());
+            rd_group.addView(radioButton);
+
+            radioButton.setOnCheckedChangeListener(this);
+            //checked first item(default)
+            if(itemlist.get(i).get_IS_ACTIVE() != null) {
+                if (itemlist.get(i).get_IS_ACTIVE().equals("true")){
+                    radioButton.setChecked(true);
+                }
+            }
+        }
+
+        return rd_group;
+    }
+
+    public View getCheckBoxForTable(List<AnswerData> itemlist){
+        LinearLayout linearLayout = new LinearLayout(AnswerActivity.this);
+        linearLayout.setOrientation(LinearLayout.VERTICAL);
+
+        for(int i=0;i<itemlist.size();i++){
+            CheckBox checkbox = new CheckBox(this);
+            checkbox.setTag(itemlist.get(i));
+            checkbox.setText(itemlist.get(i).get_AnswerDescription());
+            //rd_group.addView(radioButton);
+            linearLayout.addView(checkbox);
+
+            checkbox.setOnCheckedChangeListener(this);
+            //checked first item(default)
+            if(itemlist.get(i).get_IS_ACTIVE() != null) {
+                if (itemlist.get(i).get_IS_ACTIVE().equals("true")){
+                    checkbox.setChecked(true);
+                }
+            }
+        }
+
+        return linearLayout;
     }
 
 }
