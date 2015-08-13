@@ -1,12 +1,11 @@
 package com.algo.hha.fhsurvey;
 
 import android.app.ProgressDialog;
-import android.content.Context;
 import android.content.Intent;
-import android.os.Environment;
+import android.content.SharedPreferences;
+import android.os.Bundle;
 import android.os.Handler;
 import android.support.v7.app.ActionBarActivity;
-import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
@@ -22,17 +21,16 @@ import com.algo.hha.fhsurvey.db.AnswerDataORM;
 import com.algo.hha.fhsurvey.db.ProjectFormDataORM;
 import com.algo.hha.fhsurvey.db.QuestionFormDataORM;
 import com.algo.hha.fhsurvey.model.AnswerData;
-import com.algo.hha.fhsurvey.model.ProjectData;
 import com.algo.hha.fhsurvey.model.ProjectFormData;
 import com.algo.hha.fhsurvey.model.QuestionFormData;
 import com.algo.hha.fhsurvey.model.UserData;
+import com.algo.hha.fhsurvey.utility.Config;
 import com.pnikosis.materialishprogress.ProgressWheel;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.supercsv.cellprocessor.Optional;
-import org.supercsv.cellprocessor.constraint.NotNull;
 import org.supercsv.cellprocessor.ift.CellProcessor;
 import org.supercsv.io.CsvMapWriter;
 import org.supercsv.io.ICsvMapWriter;
@@ -62,7 +60,7 @@ public class QuestionFormListActivity extends ActionBarActivity implements Adapt
 
     MaterialDialog dialog = null;
 
-    String proj_name;
+    String proj_name, project_desc_ee;
 
     ProgressDialog download_progress_dialog = null;
     int download_progress_increaseValue = 0;
@@ -117,6 +115,8 @@ public class QuestionFormListActivity extends ActionBarActivity implements Adapt
         if (bundle != null) {
             String proj_id = bundle.getString("project_id");
             proj_name = bundle.getString("project_name");
+            project_desc_ee = bundle.getString("project_desc_ee");
+            Log.i("Project Desc ", project_desc_ee);
 
             if (proj_name != null) {
                 toolbarTitle.setText(proj_name);
@@ -138,7 +138,7 @@ public class QuestionFormListActivity extends ActionBarActivity implements Adapt
     }
 
     private void getDataFromServer(String proj_id) {
-        RetrofitAPI.getInstance().getService().getFormListByProjectID(proj_id, new Callback<String>() {
+        RetrofitAPI.getInstance(QuestionFormListActivity.this).getService().getFormListByProjectID(proj_id, new Callback<String>() {
             @Override
             public void success(String s, Response response) {
                 List<ProjectFormData> datalist = parseJSONToObject(s);
@@ -158,12 +158,12 @@ public class QuestionFormListActivity extends ActionBarActivity implements Adapt
 
     private List<ProjectFormData> parseJSONToObject(String s) {
         try {
-            /*JSONArray arr = new JSONArray(s);
-
-            for(int i=0;i<arr.length();i++){*/
+            JSONArray arr = new JSONArray(s);
             List<ProjectFormData> datalist = new ArrayList<>();
+
+            for(int i=0;i<arr.length();i++){
             ProjectFormData data = new ProjectFormData();
-            JSONObject obj = new JSONObject(s);
+            JSONObject obj = arr.getJSONObject(i);
 
             if (!obj.isNull("FormID")) {
                 data.set_formID(obj.getString("FormID"));
@@ -177,6 +177,16 @@ public class QuestionFormListActivity extends ActionBarActivity implements Adapt
                 data.set_formDescription(obj.getString("FormDescription"));
             }
 
+
+                if (!obj.isNull("FormDescription_EE"))
+                {
+                    data.set_formDescription_EE(obj.getString("FormDescription_EE"));
+                }
+
+            if(!obj.isNull("CreatedBy")){
+                data.set_createdBy(obj.getString("CreatedBy"));
+            }
+
             if (!obj.isNull("FormIndex")) {
                 data.set_formIndex(obj.getString("FormIndex"));
             }
@@ -185,9 +195,10 @@ public class QuestionFormListActivity extends ActionBarActivity implements Adapt
                 data.set_status(obj.getString("Status"));
             }
 
-            datalist.add(data);
-/*
-            }*/
+                SharedPreferences sPref = getSharedPreferences(Config.APP_PREFERENCE, MODE_PRIVATE);
+                if(data.get_createdBy().equals(sPref.getString(Config.USERID, "")))
+                    datalist.add(data);
+            }
 
             return datalist;
 
@@ -219,7 +230,7 @@ public class QuestionFormListActivity extends ActionBarActivity implements Adapt
 
         MaterialDialog.Builder builder = new MaterialDialog.Builder(this);
         builder.title(data.get_formDescription());
-        builder.customView(R.layout.custom_dialog_formlistchoice);
+        builder.customView(R.layout.custom_dialog_formlistchoice, false);
         builder.autoDismiss(false);
         builder.backgroundColor(android.R.color.white);
         builder.backgroundColorRes(android.R.color.white);
@@ -231,7 +242,7 @@ public class QuestionFormListActivity extends ActionBarActivity implements Adapt
         TextView tv_viewanswers = (TextView) dialog.findViewById(R.id.custom_dialog_view_answers);
         TextView tv_downloadquestion = (TextView) dialog.findViewById(R.id.custom_dialog_download_form);
         TextView tv_exportanswers = (TextView) dialog.findViewById(R.id.custom_dialog_export_answers);
-        TextView tv_uploadanswers = (TextView) dialog.findViewById(R.id.custom_dialog_upload_form);
+        //TextView tv_uploadanswers = (TextView) dialog.findViewById(R.id.custom_dialog_upload_form);
 
         List<QuestionFormData> dl = QuestionFormDataORM.getQuestionFormDatalist(QuestionFormListActivity.this, data.get_formID());
 
@@ -241,14 +252,14 @@ public class QuestionFormListActivity extends ActionBarActivity implements Adapt
             tv_viewanswers.setEnabled(false);
             tv_downloadquestion.setEnabled(true);
             tv_exportanswers.setEnabled(false);
-            tv_uploadanswers.setEnabled(false);
+            //tv_uploadanswers.setEnabled(false);
         }else{
             tv_addanswer.setEnabled(true);
             tv_viewquestion.setEnabled(true);
             tv_viewanswers.setEnabled(true);
             tv_downloadquestion.setEnabled(true);
             tv_exportanswers.setEnabled(true);
-            tv_uploadanswers.setEnabled(true);
+            //tv_uploadanswers.setEnabled(true);
         }
 
         tv_addanswer.setOnClickListener(this);
@@ -256,7 +267,7 @@ public class QuestionFormListActivity extends ActionBarActivity implements Adapt
         tv_viewanswers.setOnClickListener(this);
         tv_downloadquestion.setOnClickListener(this);
         tv_exportanswers.setOnClickListener(this);
-        tv_uploadanswers.setOnClickListener(this);
+        //tv_uploadanswers.setOnClickListener(this);
 
     }
 
@@ -312,8 +323,11 @@ public class QuestionFormListActivity extends ActionBarActivity implements Adapt
                 Toast.makeText(QuestionFormListActivity.this, "View Answers", Toast.LENGTH_SHORT).show();
 
                 Intent answerlistintent = new Intent(QuestionFormListActivity.this, AnswerListActivity.class);
+                answerlistintent.putExtra("proj_id", selectedData.get_projectID());
+                answerlistintent.putExtra("proj_name", proj_name);
                 answerlistintent.putExtra("form_id", selectedData.get_formID());
-                answerlistintent.putExtra("form_description", selectedData.get_formDescription());
+                answerlistintent.putExtra("proj_description_ee", project_desc_ee);
+                answerlistintent.putExtra("form_description_ee", selectedData.get_formDescription_EE());
                 startActivity(answerlistintent);
 
                 break;
@@ -335,18 +349,24 @@ public class QuestionFormListActivity extends ActionBarActivity implements Adapt
 
             case R.id.custom_dialog_export_answers:
 
-                Toast.makeText(QuestionFormListActivity.this, "Upload Answers", Toast.LENGTH_SHORT).show();
-                exportAllAnswerToCSVFile(selectedData);
+                Toast.makeText(QuestionFormListActivity.this, "Export Files", Toast.LENGTH_SHORT).show();
+                //exportAllAnswerToCSVFile(selectedData);
+                Intent intent = new Intent(QuestionFormListActivity.this, CSVListActivity.class);
+                intent.putExtra("form_description", selectedData.get_formDescription());
+                intent.putExtra("project_name", proj_name);
+                intent.putExtra("form_id", selectedData.get_formID());
+                intent.putExtra("proj_id", selectedData.get_projectID());
+                startActivity(intent);
                 break;
 
-            case R.id.custom_dialog_upload_form:
+            /*case R.id.custom_dialog_upload_form:
 
                 Intent intent = new Intent(QuestionFormListActivity.this, CSVListActivity.class);
                 intent.putExtra("form_description", selectedData.get_formDescription());
                 intent.putExtra("project_name", proj_name);
                 startActivity(intent);
 
-                break;
+                break;*/
 
         }
     }
@@ -382,7 +402,7 @@ public class QuestionFormListActivity extends ActionBarActivity implements Adapt
             }
         }).start();
 
-        RetrofitAPI.getInstance().getService().getFormDataByFormID(form_id, new Callback<String>() {
+        RetrofitAPI.getInstance(QuestionFormListActivity.this).getService().getFormDataByFormID(form_id, new Callback<String>() {
             @Override
             public void success(String s, Response response) {
 

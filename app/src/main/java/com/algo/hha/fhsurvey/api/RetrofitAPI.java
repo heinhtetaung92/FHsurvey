@@ -4,8 +4,11 @@
 
 package com.algo.hha.fhsurvey.api;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.util.Log;
 
+import com.algo.hha.fhsurvey.utility.Config;
 import com.squareup.okhttp.OkHttpClient;
 
 import java.io.BufferedReader;
@@ -34,11 +37,12 @@ public class RetrofitAPI
     private RetrofitInterface mService;
 
 
-    public RetrofitAPI(){
+    public RetrofitAPI(Context context){
 
     //ApiRequestInterceptor request_Interceptor = new ApiRequestInterceptor();
 
-
+        SharedPreferences sPref = context.getSharedPreferences(Config.APP_PREFERENCE, Context.MODE_PRIVATE);
+        String SERVER_ROUTE = sPref.getString(Config.SERVER_ROUTE, APIConfig.BASE_URL);
 
     OkHttpClient okHttpClient = new OkHttpClient();
     okHttpClient.setConnectTimeout(15000, TimeUnit.MILLISECONDS);
@@ -47,7 +51,7 @@ public class RetrofitAPI
     final RestAdapter restAdapter = new
             RestAdapter.Builder().setLogLevel(RestAdapter.LogLevel.BASIC)
             .setLogLevel(RestAdapter.LogLevel.FULL)
-            .setEndpoint(APIConfig.BASE_URL)
+            .setEndpoint(SERVER_ROUTE)
 
             .setClient(new OkClient(okHttpClient))
 
@@ -95,9 +99,9 @@ public class RetrofitAPI
     //.setRequestInterceptor(requestInterceptor)
 
 
-    public static RetrofitAPI getInstance(){
+    public static RetrofitAPI getInstance(Context context){
         if(mInstance == null){
-            mInstance = new RetrofitAPI();
+            mInstance = new RetrofitAPI(context);
         }
         return  mInstance;
     }

@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.algo.hha.fhsurvey.utility.CheckableLinearLayout
+    android:gravity="center_vertical"
+    android:paddingLeft="8.0dip"
+    android:paddingTop="4.0dip"
+    android:paddingRight="8.0dip"
+    android:paddingBottom="4.0dip"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content" android:minHeight="40.0dip"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <TextView
+        android:id="@+id/list_item_round_icon"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:gravity="center"
+        android:textSize="16sp"
+        android:textColor="@android:color/white"
+        android:layout_alignParentLeft="true"
+        android:layout_centerVertical="true"/>
+
+    <LinearLayout android:orientation="vertical"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="16dp"
+        android:layout_toRightOf="@id/list_item_round_icon">
+
+        <TextView android:id="@+id/list_item_username_textview"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="18sp"/>
+
+        <TextView
+            android:id="@+id/list_item_timestamp_textview"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="14sp"
+            android:textColor="@color/grey_500"/>
+
+    </LinearLayout>
+
+    <ImageView android:id="@+id/list_item_check_box"
+        android:visibility="invisible"
+        android:duplicateParentState="true"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="?android:listChoiceIndicatorMultiple"
+        android:layout_gravity="right"
+        android:layout_alignParentRight="true"/>
+
+</com.algo.hha.fhsurvey.utility.CheckableLinearLayout>

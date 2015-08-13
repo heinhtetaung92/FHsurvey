@@ -1,7 +1,7 @@
 package com.algo.hha.fhsurvey;
 
-import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
+import android.support.v7.app.ActionBarActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.ActionMode;
@@ -16,23 +16,18 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.afollestad.materialdialogs.MaterialDialog;
-import com.algo.hha.fhsurvey.adapter.AnswerListAdapter;
+import com.algo.hha.fhsurvey.adapter.CheckableArrayAdapter;
 import com.algo.hha.fhsurvey.api.RetrofitAPI;
-import com.algo.hha.fhsurvey.db.AnswerDataORM;
-import com.algo.hha.fhsurvey.model.ProjectFormData;
-import com.algo.hha.fhsurvey.model.UserData;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 import retrofit.Callback;
 import retrofit.RetrofitError;
 import retrofit.client.Response;
 import retrofit.mime.TypedFile;
-import retrofit.mime.TypedString;
 
 
 public class CSVListActivity extends ActionBarActivity implements AdapterView.OnItemClickListener, AdapterView.OnItemLongClickListener {
@@ -41,7 +36,7 @@ public class CSVListActivity extends ActionBarActivity implements AdapterView.On
     Toolbar mToolbar;
     File[] datalist;
 
-    String form_description = "", proj_name = "";
+    String form_description = "", proj_name = "", form_id = "", proj_id = "";
 
     List<Integer> checkedPositions = new ArrayList<>();
 
@@ -65,39 +60,143 @@ public class CSVListActivity extends ActionBarActivity implements AdapterView.On
         });
 
         listView = (ListView) findViewById(R.id.csv_listview);
-        /*listView.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
-        listView.setMultiChoiceModeListener(new MultiChoiceModeListener());
-        listView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+        listView.setOnItemClickListener(this);
+        listView.setChoiceMode(AbsListView.CHOICE_MODE_MULTIPLE_MODAL);
+        listView.setMultiChoiceModeListener(new AbsListView.MultiChoiceModeListener() {
             @Override
-            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+            public void onItemCheckedStateChanged(ActionMode mode, int position, long id, boolean checked) {
+                mode.setTitle("FHSurvey");
+                int k = listView.getCheckedItemCount();
+                if (k == 1)
+                {
+                    mode.setSubtitle((new StringBuilder()).append(k).append(" Item Selected").toString());
+                } else
+                {
+                    mode.setSubtitle((new StringBuilder()).append(k).append(" Items Selected").toString());
+                }
+                if (checked)
+                {
+                    checkedPositions.add(Integer.valueOf(position));
+                    return;
+                } else
+                {
+                    position = checkedPositions.indexOf(Integer.valueOf(position));
+                    checkedPositions.remove(position);
+                    return;
+                }
+            }
 
-
+            @Override
+            public boolean onCreateActionMode(ActionMode actionmode, Menu menu) {
+                CheckableArrayAdapter adp = (CheckableArrayAdapter)listView.getAdapter();
+                adp.setActionMode(true);
+                adp.notifyDataSetChanged();
+                menu.add(0, 1110, 1, "DELETE").setShowAsAction(1);
+                menu.add(0, 1111, 0, "UPLOAD").setShowAsAction(1);
                 return true;
             }
-        });*/
+
+            @Override
+            public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
+                return false;
+            }
+
+            @Override
+            public boolean onActionItemClicked(final ActionMode mode, MenuItem item) {
+
+                switch (item.getItemId()){
+                    case 1110:
+
+                        MaterialDialog.Builder builder = new MaterialDialog.Builder(CSVListActivity.this);
+                                builder.title("Are you sure?");
+
+                        int j = listView.getCheckedItemCount();
+                        StringBuilder stringbuilder = (new StringBuilder()).append("You are about to delete ").append(j);
+                        if (j == 1)
+                        {
+                            stringbuilder.append(" file");
+                        } else
+                        {
+                            stringbuilder.append(" files");
+                        }
+                        builder.content(stringbuilder.toString());
+
+                        builder.positiveText("YES").negativeText("Cancel").autoDismiss(false).callback(new MaterialDialog.ButtonCallback() {
+
+                            public void onNegative(MaterialDialog materialdialog) {
+                                materialdialog.dismiss();
+                            }
+
+                            public void onPositive(MaterialDialog materialdialog) {
+                                materialdialog.dismiss();
+                                materialdialog = createLoadingDialog();
+                                materialdialog.show();
+                                int i;
+                                for (Iterator iterator = checkedPositions.iterator(); iterator.hasNext(); datalist[i].delete()) {
+                                    i = ((Integer) iterator.next()).intValue();
+                                }
+
+                                datalist = sdCardHandler(form_description, proj_name, form_id, proj_id);
+                                List<String> dl = new ArrayList();
+                                for (int j = 0; j < datalist.length; j++) {
+                                    dl.add(datalist[j].getName());
+                                }
+
+                                if (datalist != null) {
+                                    CheckableArrayAdapter adp = new CheckableArrayAdapter(CSVListActivity.this, dl);
+                                    listView.setAdapter(adp);
+                                }
+                                materialdialog.dismiss();
+                                Toast.makeText(CSVListActivity.this, "Success", Toast.LENGTH_SHORT).show();
+                                checkedPositions.clear();
+                                mode.finish();
+                            }
+                        });
+
+                        builder.show();
+
+                        break;
+
+                    case 1111:
+                        break;
+                }
+
+                return false;
+            }
+
+            @Override
+            public void onDestroyActionMode(ActionMode mode) {
+                CheckableArrayAdapter adp = (CheckableArrayAdapter)listView.getAdapter();
+                adp.setActionMode(false);
+                adp.notifyDataSetChanged();
+            }
+        });
 
         listView.setOnItemClickListener(this);
-        listView.setOnItemLongClickListener(this);
+        //listView.setOnItemLongClickListener(this);
 
         Bundle bundle = getIntent().getExtras();
 
         if(bundle.getString("form_description") != null){
             form_description = bundle.getString("form_description");
             proj_name = bundle.getString("project_name");
+            form_id = bundle.getString("form_id");
+            proj_id = bundle.getString("proj_id");
 
             toolbarTitle.setText(form_description + "(" + proj_name + ")");
 
-            datalist = sdCardHandler(form_description, proj_name);
+            datalist = sdCardHandler(form_description, proj_name, form_id, proj_id);
             List<String> dl = new ArrayList<>();
 
-            for(int i=0;i<datalist.length;i++){
-                dl.add(datalist[i].getName());
-            }
 
             if(datalist == null){
                 //TODO it's null
             }else {
-                ArrayAdapter<String> adp = new ArrayAdapter<String>(CSVListActivity.this, R.layout.custom_multimode_textview, dl);
+                for(int i=0;i<datalist.length;i++){
+                    dl.add(datalist[i].getName());
+                }
+
+                CheckableArrayAdapter adp = new CheckableArrayAdapter(CSVListActivity.this, dl);
                 listView.setAdapter(adp);
             }
 
@@ -109,11 +208,16 @@ public class CSVListActivity extends ActionBarActivity implements AdapterView.On
 
     }
 
+    public MaterialDialog createLoadingDialog()
+    {
+        return (new com.afollestad.materialdialogs.MaterialDialog.Builder(this)).content("Loading...").build();
+    }
 
-    private File[] sdCardHandler(String form_description, String proj_name) {
+
+    private File[] sdCardHandler(String form_description, String proj_name, String form_id, String proj_id) {
         // SD Card path
         File root = android.os.Environment.getExternalStorageDirectory();
-        File mainDirect = new File(root.getAbsolutePath() + "/FHSurvey/" + form_description + "(" + proj_name + ")");
+        File mainDirect = new File(root.getAbsolutePath() + "/FHSurvey/" + form_id + "(" + proj_id + ")");
 
         //File directory = QuestionFormListActivity.this.getDir("FHSurvey", Context.MODE_PRIVATE);
 
@@ -126,6 +230,7 @@ public class CSVListActivity extends ActionBarActivity implements AdapterView.On
 
     }
 
+
     @Override
     public void onItemClick(AdapterView<?> parent, View view, final int position, long id) {
 
@@ -133,7 +238,7 @@ public class CSVListActivity extends ActionBarActivity implements AdapterView.On
                 .title("Upload to server")
                 .content("Are you sure to upload \"" + datalist[position].getName() + "\"")
                 .positiveText("Upload")
-                .negativeText("Cancel")
+                .negativeText("DELETE")
                 .callback(new MaterialDialog.ButtonCallback() {
                     @Override
                     public void onPositive(MaterialDialog dialog) {
@@ -142,7 +247,13 @@ public class CSVListActivity extends ActionBarActivity implements AdapterView.On
 
                     @Override
                     public void onNegative(MaterialDialog dialog) {
-                        super.onNegative(dialog);
+                        datalist[position].delete();
+                        datalist = sdCardHandler(form_description, proj_name, form_id, proj_id);
+                        ArrayAdapter adp = (ArrayAdapter) listView.getAdapter();
+                        adp.remove(adp.getItem(position));
+                        adp.notifyDataSetChanged();
+
+                        dialog.dismiss();
                     }
                 })
                 .build();
@@ -164,7 +275,7 @@ public class CSVListActivity extends ActionBarActivity implements AdapterView.On
                     public void onPositive(MaterialDialog dialog) {
 
                         datalist[position].delete();
-                        datalist = sdCardHandler(form_description, proj_name);
+                        datalist = sdCardHandler(form_description, proj_name, form_id, proj_id);
                         ArrayAdapter adp = (ArrayAdapter) listView.getAdapter();
                         adp.remove(adp.getItem(position));
                         adp.notifyDataSetChanged();
@@ -235,13 +346,13 @@ public class CSVListActivity extends ActionBarActivity implements AdapterView.On
 
         TypedFile typedFile = new TypedFile("multipart/form-data", datalist[0]);
 
-        RetrofitAPI.getInstance().getService().uploadSingleFileToServer(typedFile, new Callback<String>() {
+        RetrofitAPI.getInstance(CSVListActivity.this).getService().uploadSingleFileToServer(typedFile, new Callback<String>() {
             @Override
             public void success(String s, Response response) {
                 Toast.makeText(CSVListActivity.this, "Success", Toast.LENGTH_SHORT).show();
 
                 file.delete();
-                datalist = sdCardHandler(form_description, proj_name);
+                datalist = sdCardHandler(form_description, proj_name, form_id, proj_id);
                 ArrayAdapter adp = (ArrayAdapter) listView.getAdapter();
                 adp.remove(adp.getItem(position));
                 adp.notifyDataSetChanged();

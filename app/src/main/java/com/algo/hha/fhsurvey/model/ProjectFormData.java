@@ -10,6 +10,8 @@ public class ProjectFormData {
     private String _formDescription;
     private String _formIndex;
     private String _status;
+    private String _createdBy;
+    private String _formDescription_EE;
 
     public String get_formID() {
         return _formID;
@@ -50,4 +52,21 @@ public class ProjectFormData {
     public void set_status(String _status) {
         this._status = _status;
     }
+
+    public String get_createdBy(){
+        return _createdBy;
+    }
+
+    public void set_createdBy(String _createdBy){
+        this._createdBy = _createdBy;
+    }
+
+    public String get_formDescription_EE(){
+        return _formDescription_EE;
+    }
+
+    public void set_formDescription_EE(String _formDescription_EE){
+        this._formDescription_EE = _formDescription_EE;
+    }
+
 }

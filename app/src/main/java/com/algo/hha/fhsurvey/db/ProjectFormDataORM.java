@@ -29,6 +29,9 @@ public class ProjectFormDataORM {
     private static final String COLUMN_FORMDESCRIPTION = "formdescription";
     private static final String COLUMN_FORMDESCRIPTION_TYPE = "TEXT";
 
+    private static final String COLUMN_FORMDESCRIPTION_EE = "formdescription_ee";
+    private static final String COLUMN_FORMDESCRIPTION_EE_TYPE = "TEXT";
+
     private static final String COLUMN_FORMINDEX = "formindex";
     private static final String COLUMN_FORMINDEX_TYPE = "TEXT";
 
@@ -39,6 +42,7 @@ public class ProjectFormDataORM {
             + " (" + COLUMN_FORMID + " " + COLUMN_FORMID_TYPE + COMMA_SEP +
             COLUMN_PROJECTID + " " + COLUMN_PROJECTID_TYPE + COMMA_SEP +
             COLUMN_FORMDESCRIPTION + " " + COLUMN_FORMDESCRIPTION_TYPE + COMMA_SEP +
+            COLUMN_FORMDESCRIPTION_EE + " " + COLUMN_FORMDESCRIPTION_EE_TYPE + COMMA_SEP +
             COLUMN_FORMINDEX + " " + COLUMN_FORMINDEX_TYPE + COMMA_SEP +
             COLUMN_STATUS + " " + COLUMN_STATUS_TYPE + ")";
 
@@ -121,6 +125,7 @@ public class ProjectFormDataORM {
         values.put(COLUMN_FORMID, data.get_formID());
         values.put(COLUMN_PROJECTID, data.get_projectID());
         values.put(COLUMN_FORMDESCRIPTION, data.get_formDescription());
+        values.put(COLUMN_FORMDESCRIPTION_EE, data.get_formDescription_EE());
         values.put(COLUMN_FORMINDEX, data.get_formIndex());
         values.put(COLUMN_STATUS, data.get_status());
 
@@ -162,6 +167,7 @@ public class ProjectFormDataORM {
         provider.set_formID(cursor.getString(cursor.getColumnIndex(COLUMN_FORMID)));
         provider.set_projectID(cursor.getString(cursor.getColumnIndex(COLUMN_PROJECTID)));
         provider.set_formDescription(cursor.getString(cursor.getColumnIndex(COLUMN_FORMDESCRIPTION)));
+        provider.set_formDescription_EE(cursor.getString(cursor.getColumnIndex(COLUMN_FORMDESCRIPTION_EE)));
         provider.set_formIndex(cursor.getString(cursor.getColumnIndex(COLUMN_FORMINDEX)));
         provider.set_status(cursor.getString(cursor.getColumnIndex(COLUMN_STATUS)));
 

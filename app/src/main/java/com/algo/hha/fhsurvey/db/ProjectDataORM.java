@@ -27,6 +27,9 @@ public class ProjectDataORM {
     private static final String COLUMN_PROJECTNAME = "projectname";
     private static final String COLUMN_PROJECTNAME_TYPE = "TEXT";
 
+    private static final String COLUMN_PROJECTNAME_EE = "projectname_EE";
+    private static final String COLUMN_PROJECTNAME_EE_TYPE = "TEXT";
+
     private static final String COLUMN_DESCRIPTION = "description";
     private static final String COLUMN_DESCRIPTION_TYPE = "TEXT";
 
@@ -48,6 +51,7 @@ public class ProjectDataORM {
     public static final String SQL_CREATE_TABLE = "CREATE TABLE " + TABLE_NAME
             + " (" + COLUMN_PROJECTID + " " + COLUMN_PROJECTID_TYPE + COMMA_SEP +
             COLUMN_PROJECTNAME + " " + COLUMN_PROJECTNAME_TYPE + COMMA_SEP +
+            COLUMN_PROJECTNAME_EE + " " + COLUMN_PROJECTNAME_EE_TYPE + COMMA_SEP +
             COLUMN_DESCRIPTION + " " + COLUMN_DESCRIPTION_TYPE + COMMA_SEP +
             COLUMN_PROJECTSTATUS + " " + COLUMN_PROJECTSTATUS_TYPE + COMMA_SEP +
             COLUMN_STARTDATE + " " + COLUMN_STARTDATE_TYPE + COMMA_SEP +
@@ -133,6 +137,7 @@ public class ProjectDataORM {
         ContentValues values = new ContentValues();
         values.put(COLUMN_PROJECTID, data.get_projectID());
         values.put(COLUMN_PROJECTNAME, data.get_projectName());
+        values.put(COLUMN_PROJECTNAME_EE, data.get_projectName_EE());
         values.put(COLUMN_DESCRIPTION, data.get_description());
         values.put(COLUMN_PROJECTSTATUS, data.get_projectStatus());
         values.put(COLUMN_STARTDATE, data.get_startDate());
@@ -177,6 +182,7 @@ public class ProjectDataORM {
         ProjectData provider = new ProjectData();
         provider.set_projectID(cursor.getString(cursor.getColumnIndex(COLUMN_PROJECTID)));
         provider.set_projectName(cursor.getString(cursor.getColumnIndex(COLUMN_PROJECTNAME)));
+        provider.set_projectName_EE(cursor.getString(cursor.getColumnIndex(COLUMN_PROJECTNAME_EE)));
         provider.set_description(cursor.getString(cursor.getColumnIndex(COLUMN_DESCRIPTION)));
         provider.set_projectStatus(cursor.getString(cursor.getColumnIndex(COLUMN_PROJECTSTATUS)));
         provider.set_startDate(cursor.getString(cursor.getColumnIndex(COLUMN_STARTDATE)));

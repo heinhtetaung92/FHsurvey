@@ -3,11 +3,8 @@ package com.algo.hha.fhsurvey;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
-import android.util.Log;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
@@ -20,6 +17,9 @@ import com.algo.hha.fhsurvey.api.RetrofitAPI;
 import com.algo.hha.fhsurvey.utility.Config;
 import com.algo.hha.fhsurvey.utility.Connection;
 import com.pnikosis.materialishprogress.ProgressWheel;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import retrofit.Callback;
 import retrofit.RetrofitError;
@@ -57,8 +57,6 @@ public class LoginActivity extends ActionBarActivity implements View.OnClickList
         usernametitle = (TextView) findViewById(R.id.login_email_label);
         passwordtitle = (TextView) findViewById(R.id.login_password_label);
 
-        username.setText("df628282-383b-4476-bd49-ef822bd30b61");
-        password.setText("ll");
 
         progressbackground = findViewById(R.id.login_progresswheel_background);
         progress = (ProgressWheel) findViewById(R.id.progress_wheel);
@@ -80,6 +78,8 @@ public class LoginActivity extends ActionBarActivity implements View.OnClickList
             startActivity(intent);
         }
 
+        showDialogForChangingRoute();
+
         progressbackground.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -88,6 +88,16 @@ public class LoginActivity extends ActionBarActivity implements View.OnClickList
         });
 
 
+    }
+
+    public void checkFirstOpen()
+    {
+        SharedPreferences sharedpreferences = getApplicationContext().getSharedPreferences(Config.APP_PREFERENCE, MODE_PRIVATE);
+        if (sharedpreferences.getBoolean(Config.IS_FIRST, true))
+        {
+            showDialogForChangingRoute();
+            sharedpreferences.edit().putBoolean("isFirst", false).commit();
+        }
     }
 
     @Override
@@ -123,29 +133,33 @@ public class LoginActivity extends ActionBarActivity implements View.OnClickList
                     //                          android.provider.Settings.Secure.ANDROID_ID);
 
 
-                    RetrofitAPI.getInstance().getService().signIn(username.getText().toString(), password.getText().toString(), new Callback<String>() {
+                    RetrofitAPI.getInstance(LoginActivity.this).getService().signIn(username.getText().toString(), password.getText().toString(), new Callback<String>() {
                         @Override
                         public void success(String s, Response response) {
 
+                            JSONObject obj = null;
+                            try {
+                                obj = new JSONObject(s);
 
-                            SharedPreferences sPref = getApplicationContext().getSharedPreferences(Config.APP_PREFERENCE, MODE_PRIVATE);
-                            SharedPreferences.Editor editor = sPref.edit();
+                            if (!obj.isNull("UserID")) {
+                                String userid = obj.getString("UserID");
+                                SharedPreferences.Editor sPref = getApplicationContext().getSharedPreferences(Config.APP_PREFERENCE, 0).edit();
+                                sPref.putBoolean(Config.WAS_LOGIN, true);
+                                sPref.putString(Config.USERID, userid);
+                                sPref.putString(Config.USERNAME, username.getText().toString());
+                                sPref.commit();
+                                Toast.makeText(LoginActivity.this, "Login Success", Toast.LENGTH_SHORT).show();
+                                progress.setVisibility(View.INVISIBLE);
+                                progressbackground.setVisibility(View.INVISIBLE);
+                                Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+                                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                                startActivity(intent);
+                                finish();
 
-                            //TODO have to remove in real mode
-                            //editor.putBoolean(Config.WAS_LOGIN, true).commit();
-
-                            Toast.makeText(LoginActivity.this, "Success", Toast.LENGTH_SHORT).show();
-
-
-                            progress.setVisibility(View.INVISIBLE);
-                            progressbackground.setVisibility(View.INVISIBLE);
-
-
-                            Intent intent = new Intent(LoginActivity.this, MainActivity.class);
-                            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                            startActivity(intent);
-                            finish();
-
+                            }
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                            }
 
                         }
 
@@ -154,30 +168,6 @@ public class LoginActivity extends ActionBarActivity implements View.OnClickList
 
                             progress.setVisibility(View.INVISIBLE);
                             progressbackground.setVisibility(View.INVISIBLE);
-
-                                /*if (error.getBody() == null) {
-                                    Toast.makeText(LoginActivity.this, "Cannot connect to server!", Toast.LENGTH_SHORT).show();
-                                } else {
-
-                                    String errmsg = error.getBody().toString();
-
-                                    Log.i("Error", errmsg);
-                                    try {
-                                        JSONObject obj = new JSONObject(errmsg);
-                                        JSONArray errorarray = obj.getJSONArray("errors");
-                                        String errormsg = "Connection Error";
-                                        for(int i=0;i<errorarray.length();i++){
-                                            errormsg = errorarray.getString(0);
-                                            break;
-                                        }
-                                        Toast.makeText(LoginActivity.this, errormsg, Toast.LENGTH_SHORT).show();
-
-                                    } catch (JSONException e) {
-                                        e.printStackTrace();
-                                    }
-
-
-                                }*/
 
                             Toast.makeText(LoginActivity.this, "Signin Error!", Toast.LENGTH_SHORT).show();
                         }
@@ -205,89 +195,7 @@ public class LoginActivity extends ActionBarActivity implements View.OnClickList
                 break;
 
 
-            /*case R.id.login_forgotpassword:
 
-
-
-
-                MaterialDialog dialog = new MaterialDialog.Builder(this)
-                        .title("")
-                        .backgroundColorRes(R.color.primary)
-                        .customView(R.layout.forgot_email_layout, true)
-                        .positiveText("SEND")
-                        .positiveColor(R.color.white)
-                        .positiveColorRes(R.color.white)
-                        .typeface("ciclefina", "ciclegordita")
-                        .callback(new MaterialDialog.ButtonCallback() {
-                                      @Override
-                                      public void onPositive(final MaterialDialog dialog) {
-                                          super.onPositive(dialog);
-
-                                          EditText et_email = (EditText) dialog.findViewById(R.id.et_email_forgotpwd);
-
-                                          if (!et_email.getText().toString().equals("")) {
-
-                                              AvaliableJobsAPI.getInstance().getService().forgetPassword(et_email.getText().toString(),
-                                                      new Callback<String>() {
-                                                          @Override
-                                                          public void success(String s, Response response) {
-                                                              Toast.makeText(LoginActivity.this, "We will send to your email soon", Toast.LENGTH_SHORT).show();
-                                                          }
-
-                                                          @Override
-                                                          public void failure(RetrofitError error) {
-                                                              if (error.getBody() == null) {
-                                                                  Toast.makeText(LoginActivity.this, "Cannot connect to server!", Toast.LENGTH_SHORT).show();
-                                                              } else {
-
-                                                                  String errmsg = error.getBody().toString();
-                                                                  String errcode = "";
-
-
-                                                                  try {
-                                                                      JSONObject errobj = new JSONObject(errmsg);
-
-                                                                      errcode = errobj.getJSONObject("err").getString("message");
-
-                                                                      Toast.makeText(LoginActivity.this, errcode, Toast.LENGTH_SHORT).show();
-
-                                                                  } catch (JSONException e) {
-                                                                      e.printStackTrace();
-                                                                  }
-
-
-
-                                                              }
-                                                          }
-                                                      });
-
-                                          } else {
-                                              Toast.makeText(LoginActivity.this, "Please Enter Email", Toast.LENGTH_SHORT).show();
-                                          }
-
-
-                                          dialog.dismiss();
-                                      }
-
-                                      @Override
-                                      public void onNegative(MaterialDialog dialog) {
-                                          super.onNegative(dialog);
-
-                                          dialog.dismiss();
-
-                                      }
-                                  }
-
-                        )
-                        .build();
-
-
-                dialog.show();
-                EditText et_email = (EditText) dialog.findViewById(R.id.et_email_forgotpwd);
-                TextView message = (TextView) dialog.findViewById(R.id.et_email_forgotpwd_message);
-                message.setText("Please send your registered email to us. We will send password to your email.");
-
-                break;*/
         }
 
 
@@ -299,6 +207,32 @@ public class LoginActivity extends ActionBarActivity implements View.OnClickList
         //forgotpassword.setText("Forgot Password");
         usernametitle.setText("Username");
         passwordtitle.setText("Passsword");
+    }
+
+    public void showDialogForChangingRoute()
+    {
+        final SharedPreferences sPref = getSharedPreferences(Config.APP_PREFERENCE, MODE_PRIVATE);
+        MaterialDialog materialdialog = (new com.afollestad.materialdialogs.MaterialDialog.Builder(this)).title("Server route").customView(R.layout.custom_dialog_changeroute, false).positiveText("Add").positiveColorRes(R.color.pink_500).negativeText("Cancel").negativeColorRes(R.color.grey_500).autoDismiss(false).callback(new com.afollestad.materialdialogs.MaterialDialog.ButtonCallback() {
+
+
+            public void onNegative(MaterialDialog materialdialog1)
+            {
+                materialdialog1.dismiss();
+            }
+
+            public void onPositive(MaterialDialog materialdialog1)
+            {
+                EditText edittext = (EditText)materialdialog1.findViewById(R.id.custom_dialog_changeroute_et);
+                android.content.SharedPreferences.Editor editor = sPref.edit();
+                editor.putString(Config.SERVER_ROUTE, edittext.getText().toString());
+                editor.commit();
+                materialdialog1.dismiss();
+            }
+
+        }).build();
+
+        ((EditText)materialdialog.findViewById(R.id.custom_dialog_changeroute_et)).setText(sPref.getString(Config.SERVER_ROUTE, "http://fhsurvey.osakaohshomyanmar.com"));
+        materialdialog.show();
     }
 
 

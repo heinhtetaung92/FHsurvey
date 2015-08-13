@@ -91,6 +91,10 @@ public class AnswerDataORM {
     private static final String COLUMN_ANSWERCOLUMNINDEX_TYPE = "TEXT";
 
     //new added fields
+
+    private static final String COLUMN_USERID = "userid";
+    private static final String COLUMN_USERID_TYPE = "TEXT";
+
     private static final String COLUMN_IS_ACTIVE = "isactive";
     private static final String COLUMN_IS_ACTIVE_TYPE = "TEXT";
 
@@ -127,6 +131,7 @@ public class AnswerDataORM {
             COLUMN_ANSWERCOLUMNID + " " + COLUMN_ANSWERCOLUMNID_TYPE + COMMA_SEP +
             COLUMN_COLUMNDESCRIPTION + " " + COLUMN_COLUMNDESCRIPTION_TYPE + COMMA_SEP +
             COLUMN_IS_ACTIVE + " " + COLUMN_IS_ACTIVE_TYPE + COMMA_SEP +
+            COLUMN_USERID + " " + COLUMN_USERID_TYPE + COMMA_SEP +
             COLUMN_VALUE + " " + COLUMN_VALUE_TYPE + COMMA_SEP +
             COLUMN_TIMESTAMP + " " + COLUMN_TIMESTAMP_TYPE + COMMA_SEP +
             COLUMN_USERNAME + " " + COLUMN_USERNAME_TYPE + COMMA_SEP +
@@ -237,6 +242,7 @@ public class AnswerDataORM {
         values.put(COLUMN_ANSWERCOLUMNID, data.get_AnswerColumnID());
         values.put(COLUMN_COLUMNDESCRIPTION, data.get_ColumnDescription());
         values.put(COLUMN_ANSWERCOLUMNINDEX, data.get_AnswerColumnIndex());
+        values.put(COLUMN_USERID, data.get_userid());
         values.put(COLUMN_IS_ACTIVE, data.get_IS_ACTIVE());
         values.put(COLUMN_VALUE, data.get_VALUE());
         values.put(COLUMN_TIMESTAMP, data.get_timestamp());
@@ -391,6 +397,7 @@ public class AnswerDataORM {
         provider.set_AnswerColumnID(cursor.getString(cursor.getColumnIndex(COLUMN_ANSWERCOLUMNID)));
         provider.set_ColumnDescription(cursor.getString(cursor.getColumnIndex(COLUMN_COLUMNDESCRIPTION)));
         provider.set_AnswerColumnIndex(cursor.getString(cursor.getColumnIndex(COLUMN_ANSWERCOLUMNINDEX)));
+        provider.set_userid(cursor.getString(cursor.getColumnIndex(COLUMN_USERID)));
         provider.set_IS_ACTIVE(cursor.getString(cursor.getColumnIndex(COLUMN_IS_ACTIVE)));
         provider.set_VALUE(cursor.getString(cursor.getColumnIndex(COLUMN_VALUE)));
         provider.set_timestamp(cursor.getString(cursor.getColumnIndex(COLUMN_TIMESTAMP)));

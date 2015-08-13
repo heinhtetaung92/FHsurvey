@@ -1,9 +1,9 @@
 package com.algo.hha.fhsurvey;
 
-import android.content.Context;
 import android.content.Intent;
-import android.support.v7.app.ActionBarActivity;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.support.v7.app.ActionBarActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -13,11 +13,11 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.afollestad.materialdialogs.MaterialDialog;
 import com.algo.hha.fhsurvey.adapter.ProjectListAdapter;
 import com.algo.hha.fhsurvey.api.RetrofitAPI;
 import com.algo.hha.fhsurvey.db.ProjectDataORM;
 import com.algo.hha.fhsurvey.model.ProjectData;
+import com.algo.hha.fhsurvey.utility.Config;
 import com.algo.hha.fhsurvey.utility.Connection;
 import com.pnikosis.materialishprogress.ProgressWheel;
 
@@ -72,7 +72,9 @@ public class MainActivity extends ActionBarActivity implements AdapterView.OnIte
         }
 
         if(Connection.isOnline(this)) {
-            getDataFromServer();
+            SharedPreferences sPref = getSharedPreferences(Config.APP_PREFERENCE, MODE_PRIVATE);
+
+            getDataFromServer(sPref.getString(Config.USERID, ""));
         }else{
             if(datalist.size() <= 0) {
                 Toast.makeText(this, "Network is not available!", Toast.LENGTH_SHORT).show();
@@ -91,12 +93,13 @@ public class MainActivity extends ActionBarActivity implements AdapterView.OnIte
         Intent intent = new Intent(MainActivity.this, QuestionFormListActivity.class);
         intent.putExtra("project_name", data.get_projectName());
         intent.putExtra("project_id", data.get_projectID());
+        intent.putExtra("project_desc_ee", data.get_projectName_EE());
         startActivity(intent);
         overridePendingTransition(R.anim.pull_in_left, R.anim.push_out_right);
     }
 
-    private void getDataFromServer(){
-        RetrofitAPI.getInstance().getService().getProjectsByURL(new Callback<String>() {
+    private void getDataFromServer(String user_id){
+        RetrofitAPI.getInstance(MainActivity.this).getService().getProjectByUserID(user_id, new Callback<String>() {
             @Override
             public void success(String s, Response response) {
                 List<ProjectData> datalist = parseJSONToObject(s);
@@ -111,6 +114,16 @@ public class MainActivity extends ActionBarActivity implements AdapterView.OnIte
                 showProgressOrNot(false);
             }
         });
+    }
+
+    public void logOut()
+    {
+        SharedPreferences.Editor editor = getSharedPreferences(Config.APP_PREFERENCE, MODE_PRIVATE).edit();
+        editor.putString(Config.WAS_LOGIN, null);
+        editor.commit();
+        Intent intent = new Intent(this, LoginActivity.class);
+        startActivity(intent);
+        finish();
     }
 
     private List<ProjectData> parseJSONToObject(String s){
@@ -133,6 +146,10 @@ public class MainActivity extends ActionBarActivity implements AdapterView.OnIte
                     data.set_description(obj.getString("Description"));
                 }
 
+                if (!obj.isNull("ProjectName_EE"))
+                {
+                    data.set_projectName_EE(obj.getString("ProjectName_EE"));
+                }
                 if(!obj.isNull("ProjectStatus")){
                     data.set_projectStatus(obj.getString("ProjectStatus"));
                 }
@@ -182,4 +199,21 @@ public class MainActivity extends ActionBarActivity implements AdapterView.OnIte
         }
     }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+
+        MenuItem item = menu.add(0, 1000, 100, "LogOut");
+        item.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
+
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if(item.getItemId() == 1000){
+            logOut();
+        }
+
+        return super.onOptionsItemSelected(item);
+    }
 }

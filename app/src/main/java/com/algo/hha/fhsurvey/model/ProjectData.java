@@ -7,6 +7,7 @@ public class ProjectData {
 
     private String _projectID;
     private String _projectName;
+    private String _projectName_EE;
     private String _description;
     private String _projectStatus;
     private String _startDate;
@@ -77,6 +78,15 @@ public class ProjectData {
     public void set_status(String _status) {
         this._status = _status;
     }
+
+    public String get_projectName_EE(){
+        return _projectName_EE;
+    }
+
+    public void set_projectName_EE(String projectName_ee){
+        this._projectName_EE = projectName_ee;
+    }
+
 }
 
 /*

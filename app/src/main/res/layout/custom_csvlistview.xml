@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.algo.hha.fhsurvey.utility.CheckableLinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+
+    <ImageView android:id="@+id/csv_listitem_checkbox"
+        android:visibility="invisible"
+        android:duplicateParentState="true"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="?android:listChoiceIndicatorMultiple"
+        android:layout_alignParentRight="true"/>
+
+
+    <TextView
+        android:id="@+id/csv_listitem_label_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_toLeftOf="@+id/csv_listitem_checkbox"/>
+
+</com.algo.hha.fhsurvey.utility.CheckableLinearLayout>

@@ -1,13 +1,21 @@
 package com.algo.hha.fhsurvey;
 
 import android.graphics.Typeface;
-import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
+import android.support.v7.app.ActionBarActivity;
 import android.support.v7.widget.Toolbar;
+import android.text.InputFilter;
+import android.text.InputType;
+import android.text.Spanned;
+import android.text.TextUtils;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.HorizontalScrollView;
 import android.widget.LinearLayout;
@@ -15,20 +23,31 @@ import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.ScrollView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.algo.hha.fhsurvey.configuration.AnswerType;
 import com.algo.hha.fhsurvey.db.AnswerDataORM;
 import com.algo.hha.fhsurvey.model.AnswerData;
-import com.algo.hha.fhsurvey.model.QuestionFormData;
+import com.wdullaer.materialdatetimepicker.date.DatePickerDialog;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
+import java.util.regex.Pattern;
 
 
-public class ViewAnswerActivity extends ActionBarActivity {
+public class ViewAnswerActivity extends ActionBarActivity implements DatePickerDialog.OnDateSetListener, CompoundButton.OnCheckedChangeListener, View.OnFocusChangeListener {
 
     ScrollView answer_scrollview;
     Toolbar mToolbar;
+
+    List<EditText> editTextList;
+    List<RadioButton> radioList;
+    List<CheckBox> checkboxList;
+
+    List<List<AnswerData>>  datalist;
+
+    InputFilter filter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,7 +69,11 @@ public class ViewAnswerActivity extends ActionBarActivity {
             }
         });
 
-        List<List<AnswerData>> datalist = new ArrayList<>();
+        editTextList = new ArrayList<>();
+        radioList = new ArrayList<>();
+        checkboxList = new ArrayList<>();
+
+        datalist = new ArrayList<>();
         answer_scrollview = (ScrollView) findViewById(R.id.viewanswer_scrollview);
 
         Bundle bundle = getIntent().getExtras();
@@ -75,6 +98,18 @@ public class ViewAnswerActivity extends ActionBarActivity {
         }else{
             toolbarTitle.setText("FHSurvey");
         }
+
+        filter = new InputFilter() {
+            public CharSequence filter(CharSequence charsequence, int i, int j, Spanned spanned, int k, int l) {
+                for (; i < j; i++) {
+                    if (!Pattern.compile("[ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890]*").matcher(String.valueOf(charsequence.charAt(i))).matches()) {
+                        return "";
+                    }
+                }
+
+                return null;
+            }
+        };
 
     }
 
@@ -358,9 +393,229 @@ public class ViewAnswerActivity extends ActionBarActivity {
                 return createSingleChoiceAnswer(position, dl);
             }else if(answerTypeDesc.equals(AnswerType.TEXT)){//its type is Text type
                 return createTextInputAnswer(position, dl);
+            }else if(answerTypeDesc.equals(AnswerType.DATE)){
+                return createDateTextInputAnswer(position, dl);
+            }else if (answerTypeDesc.equals(AnswerType.MULTI_CHOICE)){
+                return createMultiChoiceAnswer(position, dl);
+            }else if(answerTypeDesc.equals(AnswerType.NUMBER)){
+                return createNumberInputAnswer(position, dl);
             }
         }
         return null;
+    }
+
+    /***
+     * this method create EditText with title
+     * @param position
+     * list's position to get data
+     * @return view
+     * to use as listview's item
+     */
+
+    private View createNumberInputAnswer(final int position, List<List<AnswerData>> dl){
+
+        final List<AnswerData> itemlist = dl.get(position);
+
+        //crate linearlayout as main layout
+        LinearLayout linearLayout = new LinearLayout(this);
+        //set layout param of abslistview
+        LinearLayout.LayoutParams param = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        param.setMargins(8, 8, 8, 8);
+        linearLayout.setLayoutParams(param);
+
+        //set orientation
+        linearLayout.setOrientation(LinearLayout.VERTICAL);
+
+        /*//add group title textview to layout
+        TextView tv_answer_grouptitle = new TextView(this);
+        LinearLayout.LayoutParams grouptitle_param = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        grouptitle_param.setMargins(16, 16, 16, 16);
+        tv_answer_grouptitle.setLayoutParams(grouptitle_param);
+
+        tv_answer_grouptitle.setText(itemlist.get(0).get_QuestionGroupDescription());
+        tv_answer_grouptitle.setTextSize(18);
+        tv_answer_grouptitle.setTextColor(getResources().getColor(android.R.color.white));
+        tv_answer_grouptitle.setPadding(16, 16, 16, 16);
+        tv_answer_grouptitle.setBackgroundColor(getResources().getColor(R.color.pink_500));
+        tv_answer_grouptitle.setTypeface(null, Typeface.BOLD);
+        linearLayout.addView(tv_answer_grouptitle);*/
+
+        //create title(Question) for edittext
+        TextView tv_answer_title = new TextView(this);
+        LinearLayout.LayoutParams title_param = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        title_param.setMargins(16, 16, 16, 16);
+        tv_answer_title.setLayoutParams(title_param);
+
+        if(itemlist.get(0).get_QuestionShortCode() !=  null) {
+            if (TextUtils.isEmpty(itemlist.get(0).get_QuestionShortCode())) {
+                tv_answer_title.setText(itemlist.get(0).get_QuestionDescription());
+            } else {
+                tv_answer_title.setText(itemlist.get(0).get_QuestionShortCode() + ". " + itemlist.get(0).get_QuestionDescription());
+            }
+        }else{
+            tv_answer_title.setText(itemlist.get(0).get_QuestionDescription());
+        }
+
+        tv_answer_title.setTextSize(18);
+        tv_answer_title.setTypeface(null, Typeface.BOLD);
+        linearLayout.addView(tv_answer_title);
+
+        //add instruction view to layout
+        if(itemlist.get(0).get_QuestionInstruction() != null) {
+            TextView tv_answer_instruction = new TextView(this);
+            LinearLayout.LayoutParams instruction_param = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            instruction_param.setMargins(16, 16, 16, 16);
+            tv_answer_instruction.setLayoutParams(title_param);
+
+            tv_answer_instruction.setText(itemlist.get(0).get_QuestionInstruction());
+            tv_answer_instruction.setTextSize(18);
+            linearLayout.addView(tv_answer_instruction);
+        }
+
+        //create edittext as requirement
+        final EditText editText = new EditText(this);
+        LinearLayout.LayoutParams editText_param = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        title_param.setMargins(8, 8, 8, 8);
+        editText.setSingleLine();
+        editText.setLayoutParams(editText_param);
+        editText.setEms(10);
+        editText.setTag(itemlist.get(0));
+        editText.setEnabled(false);
+        editText.setOnFocusChangeListener(this);
+        editText.setInputType(InputType.TYPE_CLASS_NUMBER);
+
+        if(itemlist.get(0).get_IS_ACTIVE() != null) {
+            if (itemlist.get(0).get_IS_ACTIVE().equals("true")){
+                editText.setText(itemlist.get(0).get_VALUE());
+            }
+        }
+
+        if (itemlist.get(0).get_Condition() != null)
+        {
+            String validatevalue = "";
+            String s = itemlist.get(0).get_Condition();
+            if (s.contains("Required"))
+            {
+                String as[] = s.split("/");
+                validatevalue = s;
+                if (as.length > 1)
+                {
+                    validatevalue = as[0];
+                }
+            }
+            try
+            {
+                String[] list = validatevalue.split(":");
+                if (list[0].equals("Yes"))
+                {
+                    editText.setFilters(new InputFilter[] {
+                            filter, new android.text.InputFilter.LengthFilter(Integer.parseInt(list[2]))
+                    });
+                }
+            }
+            // Misplaced declaration of an exception variable
+            catch (Exception ex) { }
+        }
+
+        editTextList.add(editText);
+        linearLayout.addView(editText);
+
+        return linearLayout;
+    }
+
+    /***
+     * this method create a view with radio button data from server
+     * @param position
+     * list's position to get data
+     * @return view
+     * to use as listview's item
+     */
+    private View createMultiChoiceAnswer(int position, List<List<AnswerData>> dl){
+        List<AnswerData> itemlist = dl.get(position);
+
+
+
+        //crate linearlayout as main layout
+        LinearLayout linearLayout = new LinearLayout(this);
+        //set layout param of abslistview
+        LinearLayout.LayoutParams param = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        param.setMargins(8, 8, 8, 8);
+        linearLayout.setLayoutParams(param);
+        //set orientation
+        linearLayout.setOrientation(LinearLayout.VERTICAL);
+
+        /*//add group title textview to layout
+        TextView tv_answer_grouptitle = new TextView(this);
+        LinearLayout.LayoutParams grouptitle_param = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        grouptitle_param.setMargins(16, 16, 16, 16);
+        tv_answer_grouptitle.setLayoutParams(grouptitle_param);
+
+        tv_answer_grouptitle.setText(itemlist.get(0).get_QuestionGroupDescription());
+        tv_answer_grouptitle.setTextSize(18);
+        tv_answer_grouptitle.setTextColor(getResources().getColor(android.R.color.white));
+        tv_answer_grouptitle.setPadding(16, 16, 16, 16);
+        tv_answer_grouptitle.setBackgroundColor(getResources().getColor(R.color.pink_500));
+        tv_answer_grouptitle.setTypeface(null, Typeface.BOLD);
+        linearLayout.addView(tv_answer_grouptitle);*/
+
+        //add title textview to layout
+        TextView tv_answer_title = new TextView(this);
+        LinearLayout.LayoutParams title_param = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        title_param.setMargins(16, 16, 16, 16);
+        tv_answer_title.setLayoutParams(title_param);
+
+        if(itemlist.get(0).get_QuestionShortCode() !=  null) {
+            if (TextUtils.isEmpty(itemlist.get(0).get_QuestionShortCode())) {
+                tv_answer_title.setText(itemlist.get(0).get_QuestionDescription());
+            } else {
+                tv_answer_title.setText(itemlist.get(0).get_QuestionShortCode() + ". " + itemlist.get(0).get_QuestionDescription());
+            }
+        }else{
+            tv_answer_title.setText(itemlist.get(0).get_QuestionDescription());
+        }
+
+        tv_answer_title.setTextSize(18);
+        tv_answer_title.setTypeface(null, Typeface.BOLD);
+        linearLayout.addView(tv_answer_title);
+
+        //add instruction view to layout
+        if(itemlist.get(0).get_QuestionInstruction() != null) {
+            TextView tv_answer_instruction = new TextView(this);
+            LinearLayout.LayoutParams instruction_param = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            instruction_param.setMargins(16, 16, 16, 16);
+            tv_answer_instruction.setLayoutParams(title_param);
+
+            tv_answer_instruction.setText(itemlist.get(0).get_QuestionInstruction());
+            tv_answer_instruction.setTextSize(18);
+            linearLayout.addView(tv_answer_instruction);
+        }
+
+        /*//create radio group for all radio buttons
+        RadioGroup rd_group = new RadioGroup(this);
+        LinearLayout.LayoutParams rd_group_param = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        rd_group_param.setMargins(16, 16, 16, 16);
+        rd_group.setLayoutParams(rd_group_param);*/
+
+        //this loop create radio button per data count
+        for(int i=0;i<itemlist.size();i++){
+            CheckBox checkbox = new CheckBox(this);
+            checkbox.setTag(itemlist.get(i));
+            checkbox.setText(itemlist.get(i).get_AnswerDescription());
+            //rd_group.addView(radioButton);
+            linearLayout.addView(checkbox);
+
+            checkboxList.add(checkbox);
+            checkbox.setOnCheckedChangeListener(this);
+            //checked first item(default)
+            if(itemlist.get(i).get_IS_ACTIVE() != null) {
+                if (itemlist.get(i).get_IS_ACTIVE().equals("true")){
+                    checkbox.setChecked(true);
+                }
+            }
+        }
+
+
+        return linearLayout;
     }
 
     /***
@@ -415,9 +670,10 @@ public class ViewAnswerActivity extends ActionBarActivity {
             RadioButton radioButton = new RadioButton(this);
             radioButton.setText(itemlist.get(i).get_AnswerDescription());
             rd_group.addView(radioButton);
-
+            radioList.add(radioButton);
             radioButton.setFocusable(false);
             radioButton.setEnabled(false);
+            radioButton.setTag(itemlist);
             //checked first item(default)
             if(itemlist.get(i).get_IS_ACTIVE() != null) {
                 if (itemlist.get(i).get_IS_ACTIVE().equals("true")){
@@ -425,6 +681,7 @@ public class ViewAnswerActivity extends ActionBarActivity {
                 }
             }
         }
+
         linearLayout.addView(rd_group);
 
         return linearLayout;
@@ -482,7 +739,9 @@ public class ViewAnswerActivity extends ActionBarActivity {
         editText.setSingleLine();
         editText.setLayoutParams(editText_param);
         editText.setEms(10);
-        editText.setFocusable(false);
+        editText.setEnabled(false);
+        editText.setEnabled(false);
+        editText.setTag(itemlist.get(0));
 
         if(itemlist.get(0).get_IS_ACTIVE() != null) {
             if (itemlist.get(0).get_IS_ACTIVE().equals("true")){
@@ -490,9 +749,138 @@ public class ViewAnswerActivity extends ActionBarActivity {
             }
         }
 
+        editTextList.add(editText);
         linearLayout.addView(editText);
 
         return linearLayout;
+    }
+
+    /***
+     * this method create EditText with title
+     * @param position
+     * list's position to get data
+     * @return view
+     * to use as listview's item
+     */
+
+    private View createDateTextInputAnswer(final int position, List<List<AnswerData>> dl){
+
+        final List<AnswerData> itemlist = dl.get(position);
+
+        //crate linearlayout as main layout
+        LinearLayout linearLayout = new LinearLayout(this);
+        //set layout param of abslistview
+        LinearLayout.LayoutParams param = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        param.setMargins(8, 8, 8, 8);
+        linearLayout.setLayoutParams(param);
+
+        //set orientation
+        linearLayout.setOrientation(LinearLayout.VERTICAL);
+
+        /*//add group title textview to layout
+        TextView tv_answer_grouptitle = new TextView(this);
+        LinearLayout.LayoutParams grouptitle_param = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        grouptitle_param.setMargins(16, 16, 16, 16);
+        tv_answer_grouptitle.setLayoutParams(grouptitle_param);
+
+        tv_answer_grouptitle.setText(itemlist.get(0).get_QuestionGroupDescription());
+        tv_answer_grouptitle.setTextSize(18);
+        tv_answer_grouptitle.setTextColor(getResources().getColor(android.R.color.white));
+        tv_answer_grouptitle.setPadding(16, 16, 16, 16);
+        tv_answer_grouptitle.setBackgroundColor(getResources().getColor(R.color.pink_500));
+        tv_answer_grouptitle.setTypeface(null, Typeface.BOLD);
+        linearLayout.addView(tv_answer_grouptitle);*/
+
+        //create title(Question) for edittext
+        TextView tv_answer_title = new TextView(this);
+        LinearLayout.LayoutParams title_param = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        title_param.setMargins(16, 16, 16, 16);
+        tv_answer_title.setLayoutParams(title_param);
+
+        if(itemlist.get(0).get_QuestionShortCode() !=  null) {
+            if (TextUtils.isEmpty(itemlist.get(0).get_QuestionShortCode())) {
+                tv_answer_title.setText(itemlist.get(0).get_QuestionDescription());
+            } else {
+                tv_answer_title.setText(itemlist.get(0).get_QuestionShortCode() + ". " + itemlist.get(0).get_QuestionDescription());
+            }
+        }else{
+            tv_answer_title.setText(itemlist.get(0).get_QuestionDescription());
+        }
+
+        tv_answer_title.setTextSize(18);
+        tv_answer_title.setTypeface(null, Typeface.BOLD);
+        linearLayout.addView(tv_answer_title);
+
+        //add instruction view to layout
+        if(itemlist.get(0).get_QuestionInstruction() != null) {
+            TextView tv_answer_instruction = new TextView(this);
+            LinearLayout.LayoutParams instruction_param = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            instruction_param.setMargins(16, 16, 16, 16);
+            tv_answer_instruction.setLayoutParams(title_param);
+
+            tv_answer_instruction.setText(itemlist.get(0).get_QuestionInstruction());
+            tv_answer_instruction.setTextSize(18);
+            linearLayout.addView(tv_answer_instruction);
+        }
+
+        //create edittext as requirement
+        final EditText editText = new EditText(this);
+        LinearLayout.LayoutParams editText_param = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        title_param.setMargins(8, 8, 8, 8);
+        editText.setSingleLine();
+        editText.setLayoutParams(editText_param);
+        editText.setEms(10);
+        editText.setTag(itemlist.get(0));
+
+        if(itemlist.get(0).get_IS_ACTIVE() != null) {
+            if (itemlist.get(0).get_IS_ACTIVE().equals("true")){
+                editText.setText(itemlist.get(0).get_VALUE());
+            }
+        }
+
+        editText.setFocusable(false);
+        editText.setOnClickListener(new android.view.View.OnClickListener() {
+            public void onClick(View view)
+            {
+                showDatePickerDialog();
+                editText.setId(R.id.my_edit_text_1);
+            }
+
+        });
+        editTextList.add(editText);
+        linearLayout.addView(editText);
+
+        return linearLayout;
+    }
+
+    private void showDatePickerDialog()
+    {
+        Calendar calendar = Calendar.getInstance();
+        DatePickerDialog.newInstance(this, calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH)).show(getFragmentManager(), "Datepickerdialog");
+    }
+
+    @Override
+    public void onDateSet(DatePickerDialog datePickerDialog, int i, int i2, int i3) {
+        EditText et = (EditText)findViewById(R.id.my_edit_text_1);
+        et.setText((new StringBuilder()).append(i3).append("/").append(i2).append("/").append(i).toString());
+        AnswerData answerdata = (AnswerData)et.getTag();
+        for(int j=0;j<datalist.size();j++){
+            List list = datalist.get(j);
+            if(!list.contains(answerdata)){
+                continue;
+            }
+
+            int k = list.indexOf(answerdata);
+            list.remove(k);
+            answerdata.set_IS_ACTIVE("true");
+            answerdata.set_VALUE(et.getText().toString());
+            list.add(k, answerdata);
+            datalist.remove(j);
+            datalist.add(j, list);
+
+            break;
+        }
+
     }
 
     private View createDividerView(){
@@ -601,9 +989,10 @@ public class ViewAnswerActivity extends ActionBarActivity {
             //call loop er column Count and create EditText
             for(int j=i;j<columnCount + i;j++){
 
-                View et_view = getEditTextView(itemlist.get(j));
+                EditText et_view = getEditTextView(itemlist.get(j));
                 if(et_view != null){
                     valueLayout.addView(et_view);
+                    editTextList.add(et_view);
                 }
 
             }
@@ -623,7 +1012,7 @@ public class ViewAnswerActivity extends ActionBarActivity {
         return linearLayout;
     }
 
-    private View getEditTextView(AnswerData data){
+    private EditText getEditTextView(AnswerData data){
 
         EditText editText = new EditText(ViewAnswerActivity.this);
         LinearLayout.LayoutParams valuetextparam = new LinearLayout.LayoutParams(350, ViewGroup.LayoutParams.MATCH_PARENT);
@@ -661,4 +1050,110 @@ public class ViewAnswerActivity extends ActionBarActivity {
         overridePendingTransition(R.anim.pull_in_left, R.anim.push_out_right);
     }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        menu.add(0, 3330, 0, "EDIT").setShowAsAction(2);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem menuitem) {
+        if (menuitem.getItemId() == 3330)
+        {
+            if (menuitem.getTitle().equals("EDIT"))
+            {
+                setEditMode();
+                menuitem.setTitle("DONE");
+            } else
+            {
+                setDoneMode();
+                menuitem.setTitle("EDIT");
+                saveToDb();
+            }
+            return true;
+        } else
+        {
+            return super.onOptionsItemSelected(menuitem);
+        }
+    }
+
+    public void setEditMode(){
+        for(EditText et: editTextList){
+            et.setEnabled(true);
+        }
+
+        for(RadioButton rb : radioList){
+            rb.setEnabled(true);
+        }
+
+        for(CheckBox cb : checkboxList){
+            cb.setEnabled(true);
+        }
+    }
+
+    public void setDoneMode(){
+        for(EditText et: editTextList){
+            et.setEnabled(false);
+        }
+
+        for(RadioButton rb : radioList){
+            rb.setEnabled(false);
+        }
+
+        for(CheckBox cb : checkboxList){
+            cb.setEnabled(false);
+        }
+    }
+
+    public void saveToDb()
+    {
+        int i = 0;
+        label0:
+        do
+        {
+            if (i < editTextList.size())
+            {
+                EditText edittext = editTextList.get(i);
+                AnswerData answerdata = (AnswerData)edittext.getTag();
+                int j = 0;
+                do
+                {
+                    label1:
+                    {
+                        if (j < datalist.size())
+                        {
+                            List list = (List)datalist.get(j);
+                            if (!list.contains(answerdata))
+                            {
+                                break label1;
+                            }
+                            int k = list.indexOf(answerdata);
+                            list.remove(k);
+                            answerdata.set_IS_ACTIVE("true");
+                            answerdata.set_VALUE(edittext.getText().toString());
+                            list.add(k, answerdata);
+                            datalist.remove(j);
+                            datalist.add(j, list);
+                        }
+                        i++;
+                        continue label0;
+                    }
+                    j++;
+                } while (true);
+            }
+            AnswerDataORM.insertAnswerFormDataListtoDatabase(this, datalist);
+            Toast.makeText(this, "Update Success", Toast.LENGTH_SHORT).show();
+            return;
+        } while (true);
+    }
+
+    @Override
+    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+
+    }
+
+    @Override
+    public void onFocusChange(View v, boolean hasFocus) {
+
+    }
 }

@@ -5,23 +5,17 @@
 package com.algo.hha.fhsurvey.api;
 
 
-import com.squareup.okhttp.Call;
-
 import java.util.Map;
 
 import retrofit.Callback;
-import retrofit.http.DELETE;
 import retrofit.http.Field;
 import retrofit.http.FormUrlEncoded;
 import retrofit.http.GET;
-import retrofit.http.Header;
 import retrofit.http.Multipart;
 import retrofit.http.POST;
-import retrofit.http.PUT;
 import retrofit.http.Part;
 import retrofit.http.PartMap;
 import retrofit.http.Path;
-import retrofit.http.Query;
 import retrofit.mime.TypedFile;
 import retrofit.mime.TypedString;
 
@@ -30,6 +24,9 @@ public interface RetrofitInterface
 
     @GET(APIConfig.PROJECTS_URL)
     public void getProjectsByURL(Callback<String> callback);
+
+    @GET(APIConfig.PROJECT_BY_USERID)
+    public void getProjectByUserID(@Path("user_id") String user_id, Callback<String> callback);
 
     @GET(APIConfig.FORMS_LIST_BY_PROJECTID_URL)
     public void getFormListByProjectID(@Path("proj_id") String proj_id, Callback<String> callback);
@@ -44,7 +41,15 @@ public interface RetrofitInterface
 
     @FormUrlEncoded
     @POST(APIConfig.REGISTER_TO_SERVER)
-    public void registerToServer(@Field("name") String name, @Field("contact_number") String contactno, @Field("email") String email, @Field("password") String pwd, @Field("password_confirmation") String pwd_conf, Callback<String> callback);
+    public void registerToServer(@Field("UserName") String username,
+                                 @Field("Password") String password,
+                                 @Field("Image") String image,
+                                 @Field("DateOfBirth") String dateofBirth,
+                                 @Field("Organization") String organization,
+                                 @Field("JobTitle") String job_title,
+                                 @Field("Address") String address
+                                , Callback<String> callback);
+
 
     @Multipart
     @POST(APIConfig.FILE_UPLOAD)
@@ -54,6 +59,12 @@ public interface RetrofitInterface
     @Multipart
     @POST(APIConfig.SINGLE_FILE_UPLOAD)
     public void uploadSingleFileToServer(@Part("fileUpload1") TypedFile typefile, Callback<String> callback);
+
+
+
+    //public abstract void registerToServer(String s, String s1, String s2, String s3, String s4, String s5, String s6,
+                                          //Callback callback);
+
 
 }
 

@@ -6,17 +6,16 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.algo.hha.fhsurvey.R;
-import com.algo.hha.fhsurvey.model.AnswerData;
 import com.algo.hha.fhsurvey.model.UserData;
 import com.algo.hha.fhsurvey.utility.ColorUtil;
 import com.algo.hha.fhsurvey.utility.RoundDrawable;
 
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.List;
 
 /**
@@ -26,6 +25,7 @@ public class AnswerListAdapter extends BaseAdapter {
 
     List<UserData> datalist = new ArrayList<>();
     private Activity mActivity;
+    public boolean isChecked = false;
 
     public AnswerListAdapter(Context context, List<UserData> dl){
         this.datalist = dl;
@@ -52,12 +52,13 @@ public class AnswerListAdapter extends BaseAdapter {
         Holder holder;
         if(convertView == null){
             LayoutInflater inflater = mActivity.getLayoutInflater();
-            convertView = inflater.inflate(R.layout.custom_viewanswer, parent, false);
+            convertView = inflater.inflate(R.layout.list_item, parent, false);
 
             holder = new Holder();
-            holder.username = (TextView) convertView.findViewById(R.id.viewanswerlist_username);
-            holder.timestamp = (TextView) convertView.findViewById(R.id.viewanswerlist_timestamp);;
-            holder.roundicon = (TextView) convertView.findViewById(R.id.viewanswerlist_roundicon);
+            holder.username = (TextView) convertView.findViewById(R.id.list_item_username_textview);
+            holder.timestamp = (TextView) convertView.findViewById(R.id.list_item_timestamp_textview);
+            holder.roundicon = (TextView) convertView.findViewById(R.id.list_item_round_icon);
+            holder.checkBox = (ImageView) convertView.findViewById(R.id.list_item_check_box);
 
             convertView.setTag(holder);
         }else{
@@ -67,7 +68,8 @@ public class AnswerListAdapter extends BaseAdapter {
         UserData data = datalist.get(position);
 
         holder.roundicon.setBackground(RoundDrawable.createUserDrawable(mActivity, ColorUtil.getRandomColor()));
-        holder.roundicon.setText(data.get_username().substring(0, 1));
+        holder.roundicon.setText(data.get_username().substring(0, 1).toUpperCase());
+
         holder.timestamp.setText(data.get_timestamp());
         holder.username.setText(data.get_username());
 
@@ -75,11 +77,28 @@ public class AnswerListAdapter extends BaseAdapter {
         calendar.setTimeInMillis(Long.parseLong(data.get_timestamp()));
         holder.timestamp.setText(calendar.get(Calendar.DAY_OF_MONTH) + "-" + calendar.get(Calendar.MONTH) + "-" + calendar.get(Calendar.YEAR) + "\n" + calendar.get(Calendar.HOUR_OF_DAY) + ":" + calendar.get(Calendar.MINUTE));
 
+        calendar = Calendar.getInstance();
+        calendar.setTimeInMillis(Long.parseLong(data.get_timestamp()));
+        holder.timestamp.setText((new StringBuilder()).append(calendar.get(Calendar.DAY_OF_MONTH)).append("-").append(calendar.get(Calendar.MONTH)).append("-").append(calendar.get(Calendar.YEAR)).append("\n").append(calendar.get(Calendar.HOUR_OF_DAY)).append(":").append(calendar.get(Calendar.MINUTE)).toString());
+        if (isChecked)
+        {
+            holder.checkBox.setVisibility(View.VISIBLE);
+        } else
+        {
+            holder.checkBox.setVisibility(View.INVISIBLE);
+        }
+
         return convertView;
+    }
+
+    public void setActionMode(boolean flag)
+    {
+        isChecked = flag;
     }
 
     public class Holder{
         public TextView username, timestamp;
         public TextView roundicon;
+        public ImageView checkBox;
     }
 }
