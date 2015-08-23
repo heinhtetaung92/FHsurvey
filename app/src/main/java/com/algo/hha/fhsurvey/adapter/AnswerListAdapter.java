@@ -2,6 +2,7 @@ package com.algo.hha.fhsurvey.adapter;
 
 import android.app.Activity;
 import android.content.Context;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -68,7 +69,9 @@ public class AnswerListAdapter extends BaseAdapter {
         UserData data = datalist.get(position);
 
         holder.roundicon.setBackground(RoundDrawable.createUserDrawable(mActivity, ColorUtil.getRandomColor()));
-        holder.roundicon.setText(data.get_username().substring(0, 1).toUpperCase());
+        if(!TextUtils.isEmpty(data.get_username())) {
+            holder.roundicon.setText(data.get_username().substring(0, 1).toUpperCase());
+        }
 
         holder.timestamp.setText(data.get_timestamp());
         holder.username.setText(data.get_username());

@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Typeface;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
@@ -33,6 +34,7 @@ import com.algo.hha.fhsurvey.db.QuestionFormDataORM;
 import com.algo.hha.fhsurvey.model.AnswerData;
 import com.algo.hha.fhsurvey.model.QuestionFormData;
 import com.algo.hha.fhsurvey.utility.Config;
+import com.algo.hha.fhsurvey.utility.InputFilterMinMax;
 import com.wdullaer.materialdatetimepicker.date.DatePickerDialog;
 
 import java.util.ArrayList;
@@ -58,6 +60,7 @@ public class AnswerActivity extends ActionBarActivity implements View.OnClickLis
     InputFilter filter;
 
     String form_id = "", proj_id = "";
+    boolean doubleBackToExitPressedOnce = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -85,6 +88,7 @@ public class AnswerActivity extends ActionBarActivity implements View.OnClickLis
 
         btn_next.setOnClickListener(this);
         btn_prev.setOnClickListener(this);
+
 
         Bundle bundle = getIntent().getExtras();
         position_track = new ArrayList<>();
@@ -714,9 +718,12 @@ public class AnswerActivity extends ActionBarActivity implements View.OnClickLis
                 String[] list = validatevalue.split(":");
                 if (list[0].equals("Yes"))
                 {
-                    editText.setFilters(new InputFilter[] {
-                            filter, new android.text.InputFilter.LengthFilter(Integer.parseInt(list[2]))
+                    editText.setFilters(new InputFilter[]{
+                            new InputFilterMinMax(AnswerActivity.this, list[1], list[2])
                     });
+                    /*editText.setFilters(new InputFilter[] {
+                            filter, new android.text.InputFilter.LengthFilter(Integer.parseInt(list[2]))
+                    });*/
                 }
             }
             // Misplaced declaration of an exception variable
@@ -883,12 +890,57 @@ public class AnswerActivity extends ActionBarActivity implements View.OnClickLis
             textView.setBackgroundResource(R.drawable.background_tabletextview);
             valueLayout.addView(textView);
 
-            //call loop er column Count and create EditText
-            for(int j=i;j<columnCount + i;j++){
+            if(itemlist.get(i).get_AnswerTypeDescription().equals(AnswerType.MULTI_CHOICE_MULTI)){
+                for(int j=i;j<columnCount+i; j++){
+                    View cb_view = getCheckBoxForTable(itemlist.get(j), itemlist);
+                    if(cb_view != null){
+                        valueLayout.addView(cb_view);
+                    }
+                }
+            }
+            else if(itemlist.get(i).get_AnswerTypeDescription().equals(AnswerType.SINGLE_CHOICE_MULTI)){
 
-                View et_view = getEditTextView(itemlist.get(j), itemlist);
-                if(et_view != null){
-                    valueLayout.addView(et_view);
+                RadioGroup rd_group = new RadioGroup(this);
+                LinearLayout.LayoutParams rd_group_param = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.MATCH_PARENT);
+                rd_group.setOrientation(LinearLayout.HORIZONTAL);
+                rd_group.setLayoutParams(rd_group_param);
+
+                for (int j = i; j < columnCount + i; j++) {
+
+                    View rb_view = getRadioButtonForTable(itemlist.get(j), itemlist);
+                    if (rb_view != null) {
+                        rd_group.addView(rb_view);
+                    }
+
+                }
+                valueLayout.addView(rd_group);
+            }
+            //create Edittext with TEXT Input type and add to table layout
+            else if(itemlist.get(i).get_AnswerTypeDescription().equals(AnswerType.TEXT_MULTI)){
+                for(int j=i;j<columnCount+i; j++){
+                    View editTextView = getEditTextView(itemlist.get(j), itemlist);
+                    if(editTextView != null){
+                        valueLayout.addView(editTextView);
+                    }
+                }
+            }
+            //create Edittext with NUMBER Input type and add to table layout
+            else if(itemlist.get(i).get_AnswerTypeDescription().equals(AnswerType.NUMBER_MULTI)){
+                for(int j=i;j<columnCount+i; j++){
+                    View editTextView = getNumberEditText(itemlist.get(j), itemlist);
+                    if(editTextView != null){
+                        valueLayout.addView(editTextView);
+                    }
+                }
+            }
+            //create Edittext with DATE Input type and add to table layout
+            else if(itemlist.get(i).get_AnswerTypeDescription().equals(AnswerType.NUMBER_MULTI)){
+
+                for(int j=i;j<columnCount+i; j++){
+                    View editTextView = getDateEditText(itemlist.get(j), itemlist);
+                    if(editTextView != null){
+                        valueLayout.addView(editTextView);
+                    }
                 }
 
             }
@@ -907,6 +959,8 @@ public class AnswerActivity extends ActionBarActivity implements View.OnClickLis
 
         return linearLayout;
     }
+
+
 
     private View getEditTextView(AnswerData data, final List datalist){
 
@@ -997,8 +1051,26 @@ public class AnswerActivity extends ActionBarActivity implements View.OnClickLis
 
     @Override
     public void onBackPressed() {
-        super.onBackPressed();
-        overridePendingTransition(R.anim.pull_in_left, R.anim.push_out_right);
+
+        if (doubleBackToExitPressedOnce) {
+            super.onBackPressed();
+            overridePendingTransition(R.anim.pull_in_left, R.anim.push_out_right);
+            return;
+        }
+
+        this.doubleBackToExitPressedOnce = true;
+        Toast.makeText(this, "Please click BACK again to exit", Toast.LENGTH_SHORT).show();
+
+        new Handler().postDelayed(new Runnable() {
+
+            @Override
+            public void run() {
+                doubleBackToExitPressedOnce=false;
+            }
+        }, 2000);
+
+
+
     }
 
     @Override
@@ -1566,28 +1638,31 @@ public class AnswerActivity extends ActionBarActivity implements View.OnClickLis
         } while (true);
     }
 
-    public EditText getNumberEditText(List<AnswerData> itemlist){
+
+
+    public EditText getNumberEditText(AnswerData item, List<AnswerData> itemlist){
         //create edittext as requirement
         final EditText editText = new EditText(this);
-        LinearLayout.LayoutParams editText_param = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        LinearLayout.LayoutParams editText_param = new LinearLayout.LayoutParams(200, ViewGroup.LayoutParams.MATCH_PARENT);
         editText_param.setMargins(8, 8, 8, 8);
         editText.setSingleLine();
         editText.setLayoutParams(editText_param);
         editText.setEms(10);
-        editText.setTag(itemlist.get(0));
+        editText.setTag(item);
         editText.setOnFocusChangeListener(this);
+        editText.setBackgroundResource(R.drawable.background_tabletextview);
         editText.setInputType(InputType.TYPE_CLASS_NUMBER);
 
-        if(itemlist.get(0).get_IS_ACTIVE() != null) {
-            if (itemlist.get(0).get_IS_ACTIVE().equals("true")){
-                editText.setText(itemlist.get(0).get_VALUE());
+        if(item.get_IS_ACTIVE() != null) {
+            if (item.get_IS_ACTIVE().equals("true")){
+                editText.setText(item.get_VALUE());
             }
         }
 
-        if (itemlist.get(0).get_Condition() != null)
+        if (item.get_Condition() != null)
         {
             String validatevalue = "";
-            String s = itemlist.get(0).get_Condition();
+            String s = item.get_Condition();
             if (s.contains("Required"))
             {
                 String as[] = s.split("/");
@@ -1602,9 +1677,12 @@ public class AnswerActivity extends ActionBarActivity implements View.OnClickLis
                 String[] list = validatevalue.split(":");
                 if (list[0].equals("Yes"))
                 {
-                    editText.setFilters(new InputFilter[] {
-                            filter, new android.text.InputFilter.LengthFilter(Integer.parseInt(list[2]))
+                    editText.setFilters(new InputFilter[]{
+                            new InputFilterMinMax(AnswerActivity.this, Integer.parseInt(list[1]), Integer.parseInt(list[2]))
                     });
+                    /*editText.setFilters(new InputFilter[] {
+                            filter, new InputFilter.LengthFilter(Integer.parseInt(list[2]))
+                    });*/
                 }
             }
             // Misplaced declaration of an exception variable
@@ -1615,19 +1693,20 @@ public class AnswerActivity extends ActionBarActivity implements View.OnClickLis
 
     }
 
-    public EditText getDateEditText(final List<AnswerData> itemlist){
+    public EditText getDateEditText(AnswerData item, final List<AnswerData> itemlist){
         final EditText editText = new EditText(this);
-        LinearLayout.LayoutParams editText_param = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        LinearLayout.LayoutParams editText_param = new LinearLayout.LayoutParams(200, ViewGroup.LayoutParams.MATCH_PARENT);
         editText_param.setMargins(8, 8, 8, 8);
         editText.setSingleLine();
         editText.setLayoutParams(editText_param);
         editText.setEms(10);
-        editText.setTag(itemlist.get(0));
+        editText.setTag(item);
+        editText.setBackgroundResource(R.drawable.background_tabletextview);
         editText.setOnFocusChangeListener(this);
 
-        if(itemlist.get(0).get_IS_ACTIVE() != null) {
-            if (itemlist.get(0).get_IS_ACTIVE().equals("true")){
-                editText.setText(itemlist.get(0).get_VALUE());
+        if(item.get_IS_ACTIVE() != null) {
+            if (item.get_IS_ACTIVE().equals("true")){
+                editText.setText(item.get_VALUE());
             }
         }
 
@@ -1641,36 +1720,7 @@ public class AnswerActivity extends ActionBarActivity implements View.OnClickLis
 
         });
 
-        editText.addTextChangedListener(new TextWatcher() {
-            public void afterTextChanged(Editable editable)
-            {
-            }
 
-            public void beforeTextChanged(CharSequence charsequence, int j, int k, int l)
-            {
-            }
-
-            public void onTextChanged(CharSequence charsequence, int j, int k, int l)
-            {
-                if (( itemlist.get(0)).get_Condition().contains("Required"))
-                {
-                    if (TextUtils.isEmpty(charsequence))
-                    {
-                        setEnabled(false);
-                        return;
-                    } else
-                    {
-                        setEnabled(true);
-                        return;
-                    }
-                } else
-                {
-                    setEnabled(true);
-                    return;
-                }
-            }
-
-        });
 
         return editText;
     }
@@ -1720,53 +1770,51 @@ public class AnswerActivity extends ActionBarActivity implements View.OnClickLis
         return editText;
     }
 
-    public View getRadioGroupForTable(List<AnswerData> itemlist){
-        //create radio group for all radio buttons
-        RadioGroup rd_group = new RadioGroup(this);
-        LinearLayout.LayoutParams rd_group_param = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        rd_group_param.setMargins(16, 16, 16, 16);
-        rd_group.setLayoutParams(rd_group_param);
+    public View getRadioButtonForTable(AnswerData item, List<AnswerData> itemlist){
 
-        //this loop create radio button per data count
-        for(int i=0;i<itemlist.size();i++){
+
             RadioButton radioButton = new RadioButton(this);
-            radioButton.setTag(itemlist.get(i));
-            radioButton.setText(itemlist.get(i).get_AnswerDescription());
-            rd_group.addView(radioButton);
+            LinearLayout.LayoutParams valueradiobuttonparam = new LinearLayout.LayoutParams(200 , ViewGroup.LayoutParams.MATCH_PARENT);
+            radioButton.setTag(item);
+            radioButton.setText(item.get_ColumnDescription());
+            radioButton.setBackgroundResource(R.drawable.background_tabletextview);
+            radioButton.setLayoutParams(valueradiobuttonparam);
 
             radioButton.setOnCheckedChangeListener(this);
-            //checked first item(default)
-            if(itemlist.get(i).get_IS_ACTIVE() != null) {
-                if (itemlist.get(i).get_IS_ACTIVE().equals("true")){
+
+            if(item.get_IS_ACTIVE() != null) {
+                if (item.get_IS_ACTIVE().equals("true")){
                     radioButton.setChecked(true);
+                }else{
+                    radioButton.setChecked(false);
                 }
             }
-        }
 
-        return rd_group;
+
+        return radioButton;
     }
 
-    public View getCheckBoxForTable(List<AnswerData> itemlist){
-        LinearLayout linearLayout = new LinearLayout(AnswerActivity.this);
-        linearLayout.setOrientation(LinearLayout.VERTICAL);
+    public View getCheckBoxForTable(AnswerData item, List<AnswerData> itemlist){
 
-        for(int i=0;i<itemlist.size();i++){
             CheckBox checkbox = new CheckBox(this);
-            checkbox.setTag(itemlist.get(i));
-            checkbox.setText(itemlist.get(i).get_AnswerDescription());
-            //rd_group.addView(radioButton);
-            linearLayout.addView(checkbox);
+            LinearLayout.LayoutParams valueradiobuttonparam = new LinearLayout.LayoutParams(200 , ViewGroup.LayoutParams.MATCH_PARENT);
+            checkbox.setTag(item);
+            checkbox.setText(item.get_ColumnDescription());
+            checkbox.setLayoutParams(valueradiobuttonparam);
+            checkbox.setBackgroundResource(R.drawable.background_tabletextview);
 
             checkbox.setOnCheckedChangeListener(this);
             //checked first item(default)
-            if(itemlist.get(i).get_IS_ACTIVE() != null) {
-                if (itemlist.get(i).get_IS_ACTIVE().equals("true")){
+            if(item.get_IS_ACTIVE() != null) {
+                if (item.get_IS_ACTIVE().equals("true")){
                     checkbox.setChecked(true);
+                }else{
+                    checkbox.setChecked(false);
                 }
             }
-        }
 
-        return linearLayout;
+
+        return checkbox;
     }
 
 }

@@ -55,7 +55,6 @@ public class MainActivity extends ActionBarActivity implements AdapterView.OnIte
         TextView toolbarTitle = (TextView) mToolbar.findViewById(R.id.toolbarTitle);
         setSupportActionBar(mToolbar);
         getSupportActionBar().setTitle("");
-        toolbarTitle.setText("FHSurvey");
         getSupportActionBar().setIcon(R.drawable.ic_launcher);
 
         project_listview = (ListView) findViewById(R.id.project_listview);
@@ -63,6 +62,10 @@ public class MainActivity extends ActionBarActivity implements AdapterView.OnIte
 
         progress = (ProgressWheel) findViewById(R.id.projectlist_progress_wheel);
         progress_background = findViewById(R.id.projectlist_progress_wheel_background);
+
+        SharedPreferences sPref = getSharedPreferences(Config.APP_PREFERENCE, MODE_PRIVATE);
+        String username = sPref.getString(Config.USERNAME, "");
+        toolbarTitle.setText("FHSurvey - " + username);
 
         showProgressOrNot(true);
 
@@ -75,7 +78,6 @@ public class MainActivity extends ActionBarActivity implements AdapterView.OnIte
         }
 
         if(Connection.isOnline(this)) {
-            SharedPreferences sPref = getSharedPreferences(Config.APP_PREFERENCE, MODE_PRIVATE);
 
             getDataFromServer(sPref.getString(Config.USERID, ""));
         }else{

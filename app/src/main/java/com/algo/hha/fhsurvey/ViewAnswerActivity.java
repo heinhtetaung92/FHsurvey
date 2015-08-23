@@ -30,6 +30,7 @@ import android.widget.Toast;
 import com.algo.hha.fhsurvey.configuration.AnswerType;
 import com.algo.hha.fhsurvey.db.AnswerDataORM;
 import com.algo.hha.fhsurvey.model.AnswerData;
+import com.algo.hha.fhsurvey.utility.InputFilterMinMax;
 import com.wdullaer.materialdatetimepicker.date.DatePickerDialog;
 
 import java.util.ArrayList;
@@ -47,7 +48,7 @@ public class ViewAnswerActivity extends ActionBarActivity implements DatePickerD
     List<RadioButton> radioList;
     List<CheckBox> checkboxList;
 
-    List<List<AnswerData>>  datalist;
+    List<List<AnswerData>> datalist;
 
     InputFilter filter;
 
@@ -91,40 +92,37 @@ public class ViewAnswerActivity extends ActionBarActivity implements DatePickerD
         };
 
         Bundle bundle = getIntent().getExtras();
-        if(bundle != null){
+        if (bundle != null) {
             String timestamp = bundle.getString("timestamp");
             String form_id = bundle.getString("form_id");
-            if(timestamp != null && form_id != null){
+            if (timestamp != null && form_id != null) {
                 //getDataFromServer(formId);
                 datalist = getDataFromDatabase(form_id, timestamp);
-                if(datalist.size() > 0){
+                if (datalist.size() > 0) {
                     addDataToScrollView(datalist);
                 }
             }
 
             String formdescription = bundle.getString("form_description");
-            if(formdescription != null){
+            if (formdescription != null) {
                 toolbarTitle.setText(formdescription);
-            }else{
+            } else {
                 toolbarTitle.setText("FHSurvey");
             }
 
-        }else{
+        } else {
             toolbarTitle.setText("FHSurvey");
         }
-
-
 
 
     }
 
 
-
-    private List<List<AnswerData>> getDataFromDatabase(String form_id, String timestamp){
+    private List<List<AnswerData>> getDataFromDatabase(String form_id, String timestamp) {
 
         List<AnswerData> dbdatalist = AnswerDataORM.getAnswerDatalist(ViewAnswerActivity.this, form_id, timestamp);
 
-        if(dbdatalist == null)
+        if (dbdatalist == null)
             return null;
 
         List<List<AnswerData>> maindatalist = new ArrayList<>();
@@ -132,7 +130,7 @@ public class ViewAnswerActivity extends ActionBarActivity implements DatePickerD
         String tempQuestionID = null;
         List<AnswerData> datalist = null;
 
-        for(int i=0;i<dbdatalist.size();i++) {
+        for (int i = 0; i < dbdatalist.size(); i++) {
 
             AnswerData data = dbdatalist.get(i);
 
@@ -146,7 +144,7 @@ public class ViewAnswerActivity extends ActionBarActivity implements DatePickerD
                 Log.i("Question ID", "They are equal");
                 datalist.add(data);
 
-                if(i == dbdatalist.size() - 2){
+                if (i == dbdatalist.size() - 2) {
                     List<AnswerData> templist = datalist;
                     maindatalist.add(templist);
                 }
@@ -317,9 +315,8 @@ public class ViewAnswerActivity extends ActionBarActivity implements DatePickerD
     }*/
 
 
-
-    private void addDataToScrollView(List<List<AnswerData>> dl){
-        if(answer_scrollview == null) return;
+    private void addDataToScrollView(List<List<AnswerData>> dl) {
+        if (answer_scrollview == null) return;
 
         answer_scrollview.removeAllViews();
 
@@ -333,13 +330,13 @@ public class ViewAnswerActivity extends ActionBarActivity implements DatePickerD
         linearLayout.setOrientation(LinearLayout.VERTICAL);
 
         String tempQuestionGroupIndex = "-1";
-        for(int k=0;k<dl.size();k++){
-            if(!tempQuestionGroupIndex.equals(dl.get(k).get(0).get_QuestionGroupIndex())){
+        for (int k = 0; k < dl.size(); k++) {
+            if (!tempQuestionGroupIndex.equals(dl.get(k).get(0).get_QuestionGroupIndex())) {
                 linearLayout.addView(createGroupTitleTextView(dl.get(k).get(0)));
                 tempQuestionGroupIndex = dl.get(k).get(0).get_QuestionGroupIndex();
             }
             View childView = matchUIwithItemType(k, dl);
-            if(childView != null) {
+            if (childView != null) {
                 linearLayout.addView(childView);
                 linearLayout.addView(createDividerView());
             }
@@ -352,12 +349,12 @@ public class ViewAnswerActivity extends ActionBarActivity implements DatePickerD
 
     }
 
-    /***
+    /**
      * create save button in bottom of the list
-     * @return
-     * "save" button
+     *
+     * @return "save" button
      */
-    private View createSaveButton(){
+    private View createSaveButton() {
         Button btnSave = new Button(this);
         btnSave.setText("Save");
         LinearLayout.LayoutParams param = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
@@ -367,7 +364,7 @@ public class ViewAnswerActivity extends ActionBarActivity implements DatePickerD
         return btnSave;
     }
 
-    private View createGroupTitleTextView(AnswerData data){
+    private View createGroupTitleTextView(AnswerData data) {
         //add group title textview to layout
         TextView tv_answer_grouptitle = new TextView(this);
         LinearLayout.LayoutParams grouptitle_param = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
@@ -384,40 +381,39 @@ public class ViewAnswerActivity extends ActionBarActivity implements DatePickerD
         return tv_answer_grouptitle;
     }
 
-    private View matchUIwithItemType(int position, List<List<AnswerData>> dl){
+    private View matchUIwithItemType(int position, List<List<AnswerData>> dl) {
         List<AnswerData> itemlist = dl.get(position);
-        if(itemlist.size() <= 0){
+        if (itemlist.size() <= 0) {
             return null;
-        }else{
+        } else {
             String answerTypeDesc = itemlist.get(0).get_AnswerTypeDescription();
 
-            if(itemlist.get(0).get_ColumnDescription() != null){
+            if (itemlist.get(0).get_ColumnDescription() != null) {
                 return createTableWithValue(position, dl);
-            }
-            else if(answerTypeDesc.equals(AnswerType.SINGLE_CHOICE)){//its type is radio button
+            } else if (answerTypeDesc.equals(AnswerType.SINGLE_CHOICE)) {//its type is radio button
                 return createSingleChoiceAnswer(position, dl);
-            }else if(answerTypeDesc.equals(AnswerType.TEXT)){//its type is Text type
+            } else if (answerTypeDesc.equals(AnswerType.TEXT)) {//its type is Text type
                 return createTextInputAnswer(position, dl);
-            }else if(answerTypeDesc.equals(AnswerType.DATE)){
+            } else if (answerTypeDesc.equals(AnswerType.DATE)) {
                 return createDateTextInputAnswer(position, dl);
-            }else if (answerTypeDesc.equals(AnswerType.MULTI_CHOICE)){
+            } else if (answerTypeDesc.equals(AnswerType.MULTI_CHOICE)) {
                 return createMultiChoiceAnswer(position, dl);
-            }else if(answerTypeDesc.equals(AnswerType.NUMBER)){
+            } else if (answerTypeDesc.equals(AnswerType.NUMBER)) {
                 return createNumberInputAnswer(position, dl);
             }
         }
         return null;
     }
 
-    /***
+    /**
      * this method create EditText with title
-     * @param position
-     * list's position to get data
+     *
+     * @param position list's position to get data
      * @return view
      * to use as listview's item
      */
 
-    private View createNumberInputAnswer(final int position, List<List<AnswerData>> dl){
+    private View createNumberInputAnswer(final int position, List<List<AnswerData>> dl) {
 
         final List<AnswerData> itemlist = dl.get(position);
 
@@ -451,13 +447,13 @@ public class ViewAnswerActivity extends ActionBarActivity implements DatePickerD
         title_param.setMargins(16, 16, 16, 16);
         tv_answer_title.setLayoutParams(title_param);
 
-        if(itemlist.get(0).get_QuestionShortCode() !=  null) {
+        if (itemlist.get(0).get_QuestionShortCode() != null) {
             if (TextUtils.isEmpty(itemlist.get(0).get_QuestionShortCode())) {
                 tv_answer_title.setText(itemlist.get(0).get_QuestionDescription());
             } else {
                 tv_answer_title.setText(itemlist.get(0).get_QuestionShortCode() + ". " + itemlist.get(0).get_QuestionDescription());
             }
-        }else{
+        } else {
             tv_answer_title.setText(itemlist.get(0).get_QuestionDescription());
         }
 
@@ -466,7 +462,7 @@ public class ViewAnswerActivity extends ActionBarActivity implements DatePickerD
         linearLayout.addView(tv_answer_title);
 
         //add instruction view to layout
-        if(itemlist.get(0).get_QuestionInstruction() != null) {
+        if (itemlist.get(0).get_QuestionInstruction() != null) {
             TextView tv_answer_instruction = new TextView(this);
             LinearLayout.LayoutParams instruction_param = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
             instruction_param.setMargins(16, 16, 16, 16);
@@ -490,37 +486,36 @@ public class ViewAnswerActivity extends ActionBarActivity implements DatePickerD
         editText.setOnFocusChangeListener(this);
         editText.setInputType(InputType.TYPE_CLASS_NUMBER);
 
-        if(itemlist.get(0).get_IS_ACTIVE() != null) {
-            if (itemlist.get(0).get_IS_ACTIVE().equals("true")){
+        if (itemlist.get(0).get_IS_ACTIVE() != null) {
+            if (itemlist.get(0).get_IS_ACTIVE().equals("true")) {
                 editText.setText(itemlist.get(0).get_VALUE());
             }
         }
 
-        if (itemlist.get(0).get_Condition() != null)
-        {
+        if (itemlist.get(0).get_Condition() != null) {
             String validatevalue = "";
             String s = itemlist.get(0).get_Condition();
-            if (s.contains("Required"))
-            {
+            if (s.contains("Required")) {
                 String as[] = s.split("/");
                 validatevalue = s;
-                if (as.length > 1)
-                {
+                if (as.length > 1) {
                     validatevalue = as[0];
                 }
             }
-            try
-            {
+            try {
                 String[] list = validatevalue.split(":");
-                if (list[0].equals("Yes"))
-                {
-                    editText.setFilters(new InputFilter[] {
-                            filter, new android.text.InputFilter.LengthFilter(Integer.parseInt(list[2]))
+                if (list[0].equals("Yes")) {
+                    editText.setFilters(new InputFilter[]{
+                            new InputFilterMinMax(ViewAnswerActivity.this, Integer.parseInt(list[1]), Integer.parseInt(list[2]))
                     });
+                    /*editText.setFilters(new InputFilter[]{
+                            filter, new android.text.InputFilter.LengthFilter(Integer.parseInt(list[2]))
+                    });*/
                 }
             }
             // Misplaced declaration of an exception variable
-            catch (Exception ex) { }
+            catch (Exception ex) {
+            }
         }
 
         editTextList.add(editText);
@@ -529,16 +524,15 @@ public class ViewAnswerActivity extends ActionBarActivity implements DatePickerD
         return linearLayout;
     }
 
-    /***
+    /**
      * this method create a view with radio button data from server
-     * @param position
-     * list's position to get data
+     *
+     * @param position list's position to get data
      * @return view
      * to use as listview's item
      */
-    private View createMultiChoiceAnswer(int position, List<List<AnswerData>> dl){
+    private View createMultiChoiceAnswer(int position, List<List<AnswerData>> dl) {
         List<AnswerData> itemlist = dl.get(position);
-
 
 
         //crate linearlayout as main layout
@@ -570,13 +564,13 @@ public class ViewAnswerActivity extends ActionBarActivity implements DatePickerD
         title_param.setMargins(16, 16, 16, 16);
         tv_answer_title.setLayoutParams(title_param);
 
-        if(itemlist.get(0).get_QuestionShortCode() !=  null) {
+        if (itemlist.get(0).get_QuestionShortCode() != null) {
             if (TextUtils.isEmpty(itemlist.get(0).get_QuestionShortCode())) {
                 tv_answer_title.setText(itemlist.get(0).get_QuestionDescription());
             } else {
                 tv_answer_title.setText(itemlist.get(0).get_QuestionShortCode() + ". " + itemlist.get(0).get_QuestionDescription());
             }
-        }else{
+        } else {
             tv_answer_title.setText(itemlist.get(0).get_QuestionDescription());
         }
 
@@ -585,7 +579,7 @@ public class ViewAnswerActivity extends ActionBarActivity implements DatePickerD
         linearLayout.addView(tv_answer_title);
 
         //add instruction view to layout
-        if(itemlist.get(0).get_QuestionInstruction() != null) {
+        if (itemlist.get(0).get_QuestionInstruction() != null) {
             TextView tv_answer_instruction = new TextView(this);
             LinearLayout.LayoutParams instruction_param = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
             instruction_param.setMargins(16, 16, 16, 16);
@@ -603,7 +597,7 @@ public class ViewAnswerActivity extends ActionBarActivity implements DatePickerD
         rd_group.setLayoutParams(rd_group_param);*/
 
         //this loop create radio button per data count
-        for(int i=0;i<itemlist.size();i++){
+        for (int i = 0; i < itemlist.size(); i++) {
             CheckBox checkbox = new CheckBox(this);
             checkbox.setTag(itemlist.get(i));
             checkbox.setText(itemlist.get(i).get_AnswerDescription());
@@ -613,8 +607,8 @@ public class ViewAnswerActivity extends ActionBarActivity implements DatePickerD
 
             checkbox.setOnCheckedChangeListener(this);
             //checked first item(default)
-            if(itemlist.get(i).get_IS_ACTIVE() != null) {
-                if (itemlist.get(i).get_IS_ACTIVE().equals("true")){
+            if (itemlist.get(i).get_IS_ACTIVE() != null) {
+                if (itemlist.get(i).get_IS_ACTIVE().equals("true")) {
                     checkbox.setChecked(true);
                 }
             }
@@ -625,14 +619,14 @@ public class ViewAnswerActivity extends ActionBarActivity implements DatePickerD
         return linearLayout;
     }
 
-    /***
+    /**
      * this method create a view with radio button data from server
-     * @param position
-     * list's position to get data
+     *
+     * @param position list's position to get data
      * @return view
      * to use as listview's item
      */
-    private View createSingleChoiceAnswer(int position, List<List<AnswerData>> dl){
+    private View createSingleChoiceAnswer(int position, List<List<AnswerData>> dl) {
         List<AnswerData> itemlist = dl.get(position);
 
         //crate linearlayout as main layout
@@ -655,7 +649,7 @@ public class ViewAnswerActivity extends ActionBarActivity implements DatePickerD
         linearLayout.addView(tv_answer_title);
 
         //add instruction view to layout
-        if(itemlist.get(0).get_QuestionInstruction() != null) {
+        if (itemlist.get(0).get_QuestionInstruction() != null) {
             TextView tv_answer_instruction = new TextView(this);
             LinearLayout.LayoutParams instruction_param = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
             instruction_param.setMargins(16, 16, 16, 16);
@@ -673,7 +667,7 @@ public class ViewAnswerActivity extends ActionBarActivity implements DatePickerD
         rd_group.setLayoutParams(rd_group_param);
 
         //this loop create radio button per data count
-        for(int i=0;i<itemlist.size();i++){
+        for (int i = 0; i < itemlist.size(); i++) {
             RadioButton radioButton = new RadioButton(this);
             radioButton.setText(itemlist.get(i).get_AnswerDescription());
             rd_group.addView(radioButton);
@@ -681,8 +675,8 @@ public class ViewAnswerActivity extends ActionBarActivity implements DatePickerD
             radioButton.setTag(itemlist.get(i));
 
             //checked first item(default)
-            if(itemlist.get(i).get_IS_ACTIVE() != null) {
-                if (itemlist.get(i).get_IS_ACTIVE().equals("true")){
+            if (itemlist.get(i).get_IS_ACTIVE() != null) {
+                if (itemlist.get(i).get_IS_ACTIVE().equals("true")) {
                     radioButton.setChecked(true);
                 }
             }
@@ -694,15 +688,15 @@ public class ViewAnswerActivity extends ActionBarActivity implements DatePickerD
         return linearLayout;
     }
 
-    /***
+    /**
      * this method create EditText with title
-     * @param position
-     * list's position to get data
+     *
+     * @param position list's position to get data
      * @return view
      * to use as listview's item
      */
 
-    private View createTextInputAnswer(final int position, List<List<AnswerData>> dl){
+    private View createTextInputAnswer(final int position, List<List<AnswerData>> dl) {
 
         List<AnswerData> itemlist = dl.get(position);
 
@@ -728,7 +722,7 @@ public class ViewAnswerActivity extends ActionBarActivity implements DatePickerD
         linearLayout.addView(tv_answer_title);
 
         //add instruction view to layout
-        if(itemlist.get(0).get_QuestionInstruction() != null) {
+        if (itemlist.get(0).get_QuestionInstruction() != null) {
             TextView tv_answer_instruction = new TextView(this);
             LinearLayout.LayoutParams instruction_param = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
             instruction_param.setMargins(16, 16, 16, 16);
@@ -750,8 +744,8 @@ public class ViewAnswerActivity extends ActionBarActivity implements DatePickerD
         //editText.setFocusable(false);
         editText.setTag(itemlist.get(0));
 
-        if(itemlist.get(0).get_IS_ACTIVE() != null) {
-            if (itemlist.get(0).get_IS_ACTIVE().equals("true")){
+        if (itemlist.get(0).get_IS_ACTIVE() != null) {
+            if (itemlist.get(0).get_IS_ACTIVE().equals("true")) {
                 editText.setText(itemlist.get(0).get_VALUE());
             }
         }
@@ -762,15 +756,15 @@ public class ViewAnswerActivity extends ActionBarActivity implements DatePickerD
         return linearLayout;
     }
 
-    /***
+    /**
      * this method create EditText with title
-     * @param position
-     * list's position to get data
+     *
+     * @param position list's position to get data
      * @return view
      * to use as listview's item
      */
 
-    private View createDateTextInputAnswer(final int position, List<List<AnswerData>> dl){
+    private View createDateTextInputAnswer(final int position, List<List<AnswerData>> dl) {
 
         final List<AnswerData> itemlist = dl.get(position);
 
@@ -804,13 +798,13 @@ public class ViewAnswerActivity extends ActionBarActivity implements DatePickerD
         title_param.setMargins(16, 16, 16, 16);
         tv_answer_title.setLayoutParams(title_param);
 
-        if(itemlist.get(0).get_QuestionShortCode() !=  null) {
+        if (itemlist.get(0).get_QuestionShortCode() != null) {
             if (TextUtils.isEmpty(itemlist.get(0).get_QuestionShortCode())) {
                 tv_answer_title.setText(itemlist.get(0).get_QuestionDescription());
             } else {
                 tv_answer_title.setText(itemlist.get(0).get_QuestionShortCode() + ". " + itemlist.get(0).get_QuestionDescription());
             }
-        }else{
+        } else {
             tv_answer_title.setText(itemlist.get(0).get_QuestionDescription());
         }
 
@@ -819,7 +813,7 @@ public class ViewAnswerActivity extends ActionBarActivity implements DatePickerD
         linearLayout.addView(tv_answer_title);
 
         //add instruction view to layout
-        if(itemlist.get(0).get_QuestionInstruction() != null) {
+        if (itemlist.get(0).get_QuestionInstruction() != null) {
             TextView tv_answer_instruction = new TextView(this);
             LinearLayout.LayoutParams instruction_param = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
             instruction_param.setMargins(16, 16, 16, 16);
@@ -839,8 +833,8 @@ public class ViewAnswerActivity extends ActionBarActivity implements DatePickerD
         editText.setEms(10);
         editText.setTag(itemlist.get(0));
 
-        if(itemlist.get(0).get_IS_ACTIVE() != null) {
-            if (itemlist.get(0).get_IS_ACTIVE().equals("true")){
+        if (itemlist.get(0).get_IS_ACTIVE() != null) {
+            if (itemlist.get(0).get_IS_ACTIVE().equals("true")) {
                 editText.setText(itemlist.get(0).get_VALUE());
             }
         }
@@ -848,8 +842,7 @@ public class ViewAnswerActivity extends ActionBarActivity implements DatePickerD
         editText.setEnabled(false);
         editText.setFocusable(false);
         editText.setOnClickListener(new android.view.View.OnClickListener() {
-            public void onClick(View view)
-            {
+            public void onClick(View view) {
                 showDatePickerDialog();
                 editText.setId(R.id.my_edit_text_1);
             }
@@ -861,20 +854,19 @@ public class ViewAnswerActivity extends ActionBarActivity implements DatePickerD
         return linearLayout;
     }
 
-    private void showDatePickerDialog()
-    {
+    private void showDatePickerDialog() {
         Calendar calendar = Calendar.getInstance();
         DatePickerDialog.newInstance(this, calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH)).show(getFragmentManager(), "Datepickerdialog");
     }
 
     @Override
     public void onDateSet(DatePickerDialog datePickerDialog, int i, int i2, int i3) {
-        EditText et = (EditText)findViewById(R.id.my_edit_text_1);
+        EditText et = (EditText) findViewById(R.id.my_edit_text_1);
         et.setText((new StringBuilder()).append(i3).append("/").append(i2).append("/").append(i).toString());
-        AnswerData answerdata = (AnswerData)et.getTag();
-        for(int j=0;j<datalist.size();j++){
+        AnswerData answerdata = (AnswerData) et.getTag();
+        for (int j = 0; j < datalist.size(); j++) {
             List list = datalist.get(j);
-            if(!list.contains(answerdata)){
+            if (!list.contains(answerdata)) {
                 continue;
             }
 
@@ -891,7 +883,7 @@ public class ViewAnswerActivity extends ActionBarActivity implements DatePickerD
 
     }
 
-    private View createDividerView(){
+    private View createDividerView() {
         View view = new View(ViewAnswerActivity.this);
         LinearLayout.LayoutParams param = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 1);
         param.setMargins(0, 16, 0, 16);
@@ -901,7 +893,7 @@ public class ViewAnswerActivity extends ActionBarActivity implements DatePickerD
         return view;
     }
 
-    private View createTableWithValue(final int position, List<List<AnswerData>> dl){
+    private View createTableWithValue(final int position, List<List<AnswerData>> dl) {
 
         List<AnswerData> itemlist = dl.get(position);
 
@@ -927,7 +919,7 @@ public class ViewAnswerActivity extends ActionBarActivity implements DatePickerD
         linearLayout.addView(tv_answer_title);
 
         //add instruction view to layout
-        if(itemlist.get(0).get_QuestionInstruction() != null) {
+        if (itemlist.get(0).get_QuestionInstruction() != null) {
             TextView tv_answer_instruction = new TextView(this);
             LinearLayout.LayoutParams instruction_param = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
             instruction_param.setMargins(16, 16, 16, 16);
@@ -954,17 +946,17 @@ public class ViewAnswerActivity extends ActionBarActivity implements DatePickerD
         titleLayout.setOrientation(LinearLayout.HORIZONTAL);
         titleLayout.setMinimumHeight(56);
         titleLayout.setLayoutParams(titleparam);
-        for(int i=0;i<columnCount+1;i++){
+        for (int i = 0; i < columnCount + 1; i++) {
 
             TextView textView = new TextView(ViewAnswerActivity.this);
             LinearLayout.LayoutParams titletextparam;
-            textView.setPadding( 8, 8, 8, 8);
+            textView.setPadding(8, 8, 8, 8);
 
-            if(i == 0){
+            if (i == 0) {
                 textView.setText("");
                 titletextparam = new LinearLayout.LayoutParams(300, ViewGroup.LayoutParams.MATCH_PARENT);
-            }else{
-                textView.setText(itemlist.get(i-1).get_ColumnDescription());
+            } else {
+                textView.setText(itemlist.get(i - 1).get_ColumnDescription());
                 titletextparam = new LinearLayout.LayoutParams(200, ViewGroup.LayoutParams.MATCH_PARENT);
             }
             textView.setLayoutParams(titletextparam);
@@ -976,7 +968,7 @@ public class ViewAnswerActivity extends ActionBarActivity implements DatePickerD
         mainlayout.addView(titleLayout);
 
 
-        for(int i=0;i<itemlist.size();i+=columnCount){
+        for (int i = 0; i < itemlist.size(); i += columnCount) {
 
             //create layout for value not title
             LinearLayout valueLayout = new LinearLayout(ViewAnswerActivity.this);
@@ -990,17 +982,69 @@ public class ViewAnswerActivity extends ActionBarActivity implements DatePickerD
             LinearLayout.LayoutParams valuetextparam = new LinearLayout.LayoutParams(300, ViewGroup.LayoutParams.MATCH_PARENT);
             textView.setLayoutParams(valuetextparam);
             textView.setText(itemlist.get(i).get_AnswerDescription());
-            textView.setPadding( 8, 8, 8, 8);
+            textView.setPadding(8, 8, 8, 8);
             textView.setBackgroundResource(R.drawable.background_tabletextview);
             valueLayout.addView(textView);
 
-            //call loop er column Count and create EditText
-            for(int j=i;j<columnCount + i;j++){
+            if (itemlist.get(i).get_AnswerTypeDescription().equals(AnswerType.MULTI_CHOICE_MULTI)) {
+                for (int j = i; j < columnCount + i; j++) {
+                    View cb_view = getCheckBoxForTable(itemlist.get(j), itemlist);
+                    if (cb_view != null) {
+                        valueLayout.addView(cb_view);
+                    }
+                }
+            } else if (itemlist.get(i).get_AnswerTypeDescription().equals(AnswerType.SINGLE_CHOICE_MULTI)) {
 
-                EditText et_view = getEditTextView(itemlist.get(j));
-                if(et_view != null){
-                    valueLayout.addView(et_view);
-                    editTextList.add(et_view);
+                RadioGroup rd_group = new RadioGroup(this);
+                LinearLayout.LayoutParams rd_group_param = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.MATCH_PARENT);
+                rd_group.setOrientation(LinearLayout.HORIZONTAL);
+                rd_group.setLayoutParams(rd_group_param);
+
+                for (int j = i; j < columnCount + i; j++) {
+
+                    RadioButton rb_view = getRadioButtonForTable(itemlist.get(j), itemlist);
+                    if (rb_view != null) {
+
+                        if (itemlist.get(j).get_IS_ACTIVE() != null) {
+                            rd_group.addView(rb_view);
+                            if (itemlist.get(j).get_IS_ACTIVE().equals("true")) {
+                                rb_view.setChecked(true);
+                            } else {
+                                rb_view.setChecked(false);
+                            }
+                        }
+
+
+                    }
+
+                }
+                valueLayout.addView(rd_group);
+            }//create Edittext with TEXT Input type and add to table layout
+            else if(itemlist.get(i).get_AnswerTypeDescription().equals(AnswerType.TEXT_MULTI)){
+                for(int j=i;j<columnCount+i; j++){
+                    View editTextView = getEditTextView(itemlist.get(j), itemlist);
+                    if(editTextView != null){
+                        valueLayout.addView(editTextView);
+                    }
+                }
+            }
+            //create Edittext with NUMBER Input type and add to table layout
+            else if(itemlist.get(i).get_AnswerTypeDescription().equals(AnswerType.NUMBER_MULTI)){
+                for(int j=i;j<columnCount+i; j++){
+                    View editTextView = getNumberEditText(itemlist.get(j), itemlist);
+                    if(editTextView != null){
+                        valueLayout.addView(editTextView);
+                    }
+                }
+            }
+            //create Edittext with DATE Input type and add to table layout
+            else if(itemlist.get(i).get_AnswerTypeDescription().equals(AnswerType.NUMBER_MULTI)){
+
+                for(int j=i;j<columnCount+i; j++){
+                    View editTextView = getDateEditText(itemlist.get(j), itemlist);
+                    if(editTextView != null){
+                        valueLayout.addView(editTextView);
+                    }
                 }
 
             }
@@ -1011,7 +1055,7 @@ public class ViewAnswerActivity extends ActionBarActivity implements DatePickerD
 
         HorizontalScrollView horizontalScrollView = new HorizontalScrollView(ViewAnswerActivity.this);
         LinearLayout.LayoutParams horizontalScrollViewparam = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        horizontalScrollViewparam.setMargins(16,16,16,16);
+        horizontalScrollViewparam.setMargins(16, 16, 16, 16);
         horizontalScrollView.setLayoutParams(horizontalScrollViewparam);
 
         horizontalScrollView.addView(mainlayout);
@@ -1020,7 +1064,7 @@ public class ViewAnswerActivity extends ActionBarActivity implements DatePickerD
         return linearLayout;
     }
 
-    private EditText getEditTextView(AnswerData data){
+    private EditText getEditTextView(AnswerData data, List<AnswerData> datatlis) {
 
         EditText editText = new EditText(ViewAnswerActivity.this);
         LinearLayout.LayoutParams valuetextparam = new LinearLayout.LayoutParams(200, ViewGroup.LayoutParams.MATCH_PARENT);
@@ -1030,8 +1074,8 @@ public class ViewAnswerActivity extends ActionBarActivity implements DatePickerD
         //editText.setFocusable(false);
         editText.setBackgroundResource(R.drawable.background_tabletextview);
 
-        if(data.get_IS_ACTIVE() != null) {
-            if (data.get_IS_ACTIVE().equals("true")){
+        if (data.get_IS_ACTIVE() != null) {
+            if (data.get_IS_ACTIVE().equals("true")) {
                 editText.setText(data.get_VALUE());
             }
         }
@@ -1039,13 +1083,13 @@ public class ViewAnswerActivity extends ActionBarActivity implements DatePickerD
         return editText;
     }
 
-    private int getColumnCountFromDataList(List<AnswerData> dl){
+    private int getColumnCountFromDataList(List<AnswerData> dl) {
 
         List<String> collist = new ArrayList<>();
-        for(int i=0;i<dl.size();i++){
-            if(collist.contains(dl.get(i).get_AnswerColumnIndex())){
+        for (int i = 0; i < dl.size(); i++) {
+            if (collist.contains(dl.get(i).get_AnswerColumnIndex())) {
                 return collist.size();
-            }else{
+            } else {
                 collist.add(dl.get(i).get_AnswerColumnIndex());
             }
         }
@@ -1067,67 +1111,62 @@ public class ViewAnswerActivity extends ActionBarActivity implements DatePickerD
 
     @Override
     public boolean onOptionsItemSelected(MenuItem menuitem) {
-        if (menuitem.getItemId() == 3330)
-        {
-            if (menuitem.getTitle().equals("EDIT"))
-            {
+        if (menuitem.getItemId() == 3330) {
+            if (menuitem.getTitle().equals("EDIT")) {
                 setEditMode();
                 menuitem.setTitle("DONE");
-            } else
-            {
+            } else {
                 setDoneMode();
                 menuitem.setTitle("EDIT");
                 saveToDb();
             }
             return true;
-        } else
-        {
+        } else {
             return super.onOptionsItemSelected(menuitem);
         }
     }
 
-    public void setEditMode(){
-        for(EditText et: editTextList){
+    public void setEditMode() {
+        for (EditText et : editTextList) {
             et.setFocusable(true);
             et.setEnabled(true);
         }
 
-        for(RadioButton rb : radioList){
+        for (RadioButton rb : radioList) {
             rb.setFocusable(true);
             rb.setEnabled(true);
         }
 
-        for(CheckBox cb : checkboxList){
+        for (CheckBox cb : checkboxList) {
             cb.setFocusable(true);
             cb.setEnabled(true);
         }
     }
 
-    public void setDoneMode(){
-        for(EditText et: editTextList){
+    public void setDoneMode() {
+        for (EditText et : editTextList) {
             et.setEnabled(false);
             //et.setFocusable(false);
         }
 
-        for(RadioButton rb : radioList){
+        for (RadioButton rb : radioList) {
             rb.setEnabled(false);
             //rb.setFocusable(false);
         }
 
-        for(CheckBox cb : checkboxList){
+        for (CheckBox cb : checkboxList) {
             cb.setEnabled(false);
             //cb.setFocusable(false);
         }
     }
 
-    public void saveToDb()
-    {
+    public void saveToDb() {
 
-        for(EditText editText: editTextList){
+        for (EditText editText : editTextList) {
             AnswerData answerData = (AnswerData) editText.getTag();
 
-            for(int l=0;l<datalist.size();l++){
-                if(datalist.get(l).contains(answerData)){
+            for (int l = 0; l < datalist.size(); l++) {
+                if (datalist.get(l).contains(answerData)) {
 
                     List<AnswerData> list = datalist.get(l);
 
@@ -1143,11 +1182,11 @@ public class ViewAnswerActivity extends ActionBarActivity implements DatePickerD
 
         }
 
-        for(RadioButton radioButton: radioList){
+        for (RadioButton radioButton : radioList) {
             AnswerData answerData = (AnswerData) radioButton.getTag();
 
-            for(int l=0;l<datalist.size();l++){
-                if(datalist.get(l).contains(answerData)){
+            for (int l = 0; l < datalist.size(); l++) {
+                if (datalist.get(l).contains(answerData)) {
 
                     List<AnswerData> list = datalist.get(l);
 
@@ -1164,11 +1203,11 @@ public class ViewAnswerActivity extends ActionBarActivity implements DatePickerD
             }
         }
 
-        for(CheckBox checkBox: checkboxList){
+        for (CheckBox checkBox : checkboxList) {
             AnswerData answerData = (AnswerData) checkBox.getTag();
 
-            for(int l=0;l<datalist.size();l++){
-                if(datalist.get(l).contains(answerData)){
+            for (int l = 0; l < datalist.size(); l++) {
+                if (datalist.get(l).contains(answerData)) {
 
                     List<AnswerData> list = datalist.get(l);
 
@@ -1199,7 +1238,7 @@ public class ViewAnswerActivity extends ActionBarActivity implements DatePickerD
 
     }
 
-    private void hideKeyboard(){
+    private void hideKeyboard() {
         // Check if no view has focus:
         View view = this.getCurrentFocus();
         if (view != null) {
@@ -1215,4 +1254,131 @@ public class ViewAnswerActivity extends ActionBarActivity implements DatePickerD
         super.onDestroy();
         answer_scrollview.removeAllViews();
     }
+
+    public RadioButton getRadioButtonForTable(AnswerData item, List<AnswerData> itemlist) {
+
+
+        RadioButton radioButton = new RadioButton(this);
+        LinearLayout.LayoutParams valueradiobuttonparam = new LinearLayout.LayoutParams(200, ViewGroup.LayoutParams.MATCH_PARENT);
+        radioButton.setTag(item);
+        radioButton.setText(item.get_ColumnDescription());
+        radioButton.setBackgroundResource(R.drawable.background_tabletextview);
+        radioButton.setLayoutParams(valueradiobuttonparam);
+        radioButton.setEnabled(false);
+        radioButton.setOnCheckedChangeListener(this);
+
+
+        radioList.add(radioButton);
+        return radioButton;
+    }
+
+    public View getCheckBoxForTable(AnswerData item, List<AnswerData> itemlist) {
+
+        CheckBox checkbox = new CheckBox(this);
+        LinearLayout.LayoutParams valueradiobuttonparam = new LinearLayout.LayoutParams(200, ViewGroup.LayoutParams.MATCH_PARENT);
+        checkbox.setTag(item);
+        checkbox.setText(item.get_ColumnDescription());
+        checkbox.setLayoutParams(valueradiobuttonparam);
+        checkbox.setBackgroundResource(R.drawable.background_tabletextview);
+        checkbox.setEnabled(false);
+        checkbox.setOnCheckedChangeListener(this);
+        //checked first item(default)
+        if (item.get_IS_ACTIVE() != null) {
+            if (item.get_IS_ACTIVE().equals("true")) {
+                checkbox.setChecked(true);
+            } else {
+                checkbox.setChecked(false);
+            }
+        }
+
+        checkboxList.add(checkbox);
+
+        return checkbox;
+    }
+
+
+    public EditText getNumberEditText(AnswerData item, List<AnswerData> itemlist) {
+        //create edittext as requirement
+        final EditText editText = new EditText(this);
+        LinearLayout.LayoutParams editText_param = new LinearLayout.LayoutParams(200, ViewGroup.LayoutParams.MATCH_PARENT);
+        editText_param.setMargins(8, 8, 8, 8);
+        editText.setSingleLine();
+        editText.setLayoutParams(editText_param);
+        editText.setEms(10);
+        editText.setTag(item);
+        editText.setOnFocusChangeListener(this);
+        editText.setBackgroundResource(R.drawable.background_tabletextview);
+        editText.setInputType(InputType.TYPE_CLASS_NUMBER);
+        editText.setEnabled(false);
+        if (item.get_IS_ACTIVE() != null) {
+            if (item.get_IS_ACTIVE().equals("true")) {
+                editText.setText(item.get_VALUE());
+            }
+        }
+
+        if (item.get_Condition() != null) {
+            String validatevalue = "";
+            String s = item.get_Condition();
+            if (s.contains("Required")) {
+                String as[] = s.split("/");
+                validatevalue = s;
+                if (as.length > 1) {
+                    validatevalue = as[0];
+                }
+            }
+            try {
+                String[] list = validatevalue.split(":");
+                if (list[0].equals("Yes")) {
+                    editText.setFilters(new InputFilter[]{
+                            new InputFilterMinMax(ViewAnswerActivity.this, Integer.parseInt(list[1]), Integer.parseInt(list[2]))
+                    });
+                    /*editText.setFilters(new InputFilter[]{
+                            filter, new android.text.InputFilter.LengthFilter(Integer.parseInt(list[2]))
+                    });*/
+                }
+            }
+            // Misplaced declaration of an exception variable
+            catch (Exception ex) {
+            }
+        }
+
+        editTextList.add(editText);
+
+        return editText;
+
+    }
+
+    public EditText getDateEditText(AnswerData item, final List<AnswerData> itemlist) {
+        final EditText editText = new EditText(this);
+        LinearLayout.LayoutParams editText_param = new LinearLayout.LayoutParams(200, ViewGroup.LayoutParams.MATCH_PARENT);
+        editText_param.setMargins(8, 8, 8, 8);
+        editText.setSingleLine();
+        editText.setLayoutParams(editText_param);
+        editText.setEms(10);
+        editText.setTag(item);
+        editText.setOnFocusChangeListener(this);
+        editText.setEnabled(false);
+        editText.setBackgroundResource(R.drawable.background_tabletextview);
+        if (item.get_IS_ACTIVE() != null) {
+            if (item.get_IS_ACTIVE().equals("true")) {
+                editText.setText(item.get_VALUE());
+            }
+        }
+
+        editText.setFocusable(false);
+        editText.setOnClickListener(new android.view.View.OnClickListener() {
+            public void onClick(View view) {
+                showDatePickerDialog();
+                editText.setId(R.id.my_edit_text_1);
+            }
+
+        });
+
+        editTextList.add(editText);
+
+
+        return editText;
+    }
+
+
 }

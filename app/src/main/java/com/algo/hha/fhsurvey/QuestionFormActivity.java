@@ -509,6 +509,7 @@ public class QuestionFormActivity extends ActionBarActivity implements DatePicke
             CheckBox checkbox = new CheckBox(this);
             checkbox.setTag(itemlist.get(i));
             checkbox.setText(itemlist.get(i).get_AnswerDescription());
+            checkbox.setEnabled(false);
             //rd_group.addView(radioButton);
             linearLayout.addView(checkbox);
 
@@ -854,16 +855,62 @@ public class QuestionFormActivity extends ActionBarActivity implements DatePicke
             textView.setBackgroundResource(R.drawable.background_tabletextview);
             valueLayout.addView(textView);
 
-            //call loop er column Count and create EditText
-            for(int j=i;j<columnCount + i;j++){
 
-                View et_view = getEditTextView();
-                if(et_view != null){
-                    valueLayout.addView(et_view);
+
+            if(itemlist.get(i).get_AnswerTypeDescription().equals(AnswerType.MULTI_CHOICE_MULTI)){
+                for(int j=i;j<columnCount+i; j++){
+                    View cb_view = getCheckBoxForTable(itemlist.get(j), itemlist);
+                    if(cb_view != null){
+                        valueLayout.addView(cb_view);
+                    }
+                }
+            }
+            else if(itemlist.get(i).get_AnswerTypeDescription().equals(AnswerType.SINGLE_CHOICE_MULTI)){
+
+                RadioGroup rd_group = new RadioGroup(this);
+                LinearLayout.LayoutParams rd_group_param = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.MATCH_PARENT);
+                rd_group.setOrientation(LinearLayout.HORIZONTAL);
+                rd_group.setLayoutParams(rd_group_param);
+
+                for (int j = i; j < columnCount + i; j++) {
+
+                    View rb_view = getRadioButtonForTable(itemlist.get(j), itemlist);
+                    if (rb_view != null) {
+                        rd_group.addView(rb_view);
+                    }
+
+                }
+                valueLayout.addView(rd_group);
+
+            }//create Edittext with TEXT Input type and add to table layout
+            else if(itemlist.get(i).get_AnswerTypeDescription().equals(AnswerType.TEXT_MULTI)){
+                for(int j=i;j<columnCount+i; j++){
+                    View editTextView = getEditTextView(itemlist.get(j), itemlist);
+                    if(editTextView != null){
+                        valueLayout.addView(editTextView);
+                    }
+                }
+            }
+            //create Edittext with NUMBER Input type and add to table layout
+            else if(itemlist.get(i).get_AnswerTypeDescription().equals(AnswerType.NUMBER_MULTI)){
+                for(int j=i;j<columnCount+i; j++){
+                    View editTextView = getNumberEditText(itemlist.get(j), itemlist);
+                    if(editTextView != null){
+                        valueLayout.addView(editTextView);
+                    }
+                }
+            }
+            //create Edittext with DATE Input type and add to table layout
+            else if(itemlist.get(i).get_AnswerTypeDescription().equals(AnswerType.NUMBER_MULTI)){
+
+                for(int j=i;j<columnCount+i; j++){
+                    View editTextView = getDateEditText(itemlist.get(j), itemlist);
+                    if(editTextView != null){
+                        valueLayout.addView(editTextView);
+                    }
                 }
 
             }
-
             mainlayout.addView(valueLayout);
 
         }
@@ -879,13 +926,45 @@ public class QuestionFormActivity extends ActionBarActivity implements DatePicke
         return linearLayout;
     }
 
-    private View getEditTextView(){
+    public EditText getDateEditText(QuestionFormData item, final List<QuestionFormData> itemlist){
+        final EditText editText = new EditText(this);
+        LinearLayout.LayoutParams editText_param = new LinearLayout.LayoutParams(200, ViewGroup.LayoutParams.MATCH_PARENT);
+        editText_param.setMargins(8, 8, 8, 8);
+        editText.setSingleLine();
+        editText.setLayoutParams(editText_param);
+        editText.setEms(10);
+        editText.setTag(item);
+        editText.setEnabled(false);
+        editText.setBackgroundResource(R.drawable.background_tabletextview);
+
+        return editText;
+    }
+
+    public EditText getNumberEditText(QuestionFormData item, List<QuestionFormData> itemlist){
+        //create edittext as requirement
+        final EditText editText = new EditText(this);
+        LinearLayout.LayoutParams editText_param = new LinearLayout.LayoutParams(200, ViewGroup.LayoutParams.MATCH_PARENT);
+        editText_param.setMargins(8, 8, 8, 8);
+        editText.setSingleLine();
+        editText.setLayoutParams(editText_param);
+        editText.setEms(10);
+        editText.setInputType(InputType.TYPE_CLASS_NUMBER);
+        editText.setBackgroundResource(R.drawable.background_tabletextview);
+        editText.setEnabled(false);
+
+
+        return editText;
+
+    }
+
+    private View getEditTextView(QuestionFormData item, List<QuestionFormData> itemlist){
 
         EditText editText = new EditText(QuestionFormActivity.this);
-        LinearLayout.LayoutParams valuetextparam = new LinearLayout.LayoutParams(200, ViewGroup.LayoutParams.WRAP_CONTENT);
+        LinearLayout.LayoutParams valuetextparam = new LinearLayout.LayoutParams(200, ViewGroup.LayoutParams.MATCH_PARENT);
         editText.setLayoutParams(valuetextparam);
         editText.setSingleLine();
-        editText.setEnabled(false);         editText.setFocusable(false);
+        editText.setEnabled(false);
+        editText.setFocusable(false);
         editText.setBackgroundResource(R.drawable.background_tabletextview);
 
         return editText;
@@ -927,4 +1006,33 @@ public class QuestionFormActivity extends ActionBarActivity implements DatePicke
         EditText editText = (EditText) findViewById(R.id.my_edit_text_1);
         editText.setText("test");
     }
+    public View getCheckBoxForTable(QuestionFormData item, List<QuestionFormData> itemlist){
+
+        CheckBox checkbox = new CheckBox(this);
+        LinearLayout.LayoutParams valueradiobuttonparam = new LinearLayout.LayoutParams(200 , ViewGroup.LayoutParams.MATCH_PARENT);
+        checkbox.setTag(item);
+        checkbox.setText(item.get_ColumnDescription());
+        checkbox.setLayoutParams(valueradiobuttonparam);
+        checkbox.setBackgroundResource(R.drawable.background_tabletextview);
+        checkbox.setEnabled(false);
+
+
+        return checkbox;
+    }
+
+    public View getRadioButtonForTable(QuestionFormData item, List<QuestionFormData> itemlist){
+
+
+        RadioButton radioButton = new RadioButton(this);
+        LinearLayout.LayoutParams valueradiobuttonparam = new LinearLayout.LayoutParams(200 , ViewGroup.LayoutParams.MATCH_PARENT);
+        radioButton.setTag(item);
+        radioButton.setText(item.get_ColumnDescription());
+        radioButton.setBackgroundResource(R.drawable.background_tabletextview);
+        radioButton.setLayoutParams(valueradiobuttonparam);
+        radioButton.setEnabled(false);
+
+
+        return radioButton;
+    }
+
 }

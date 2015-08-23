@@ -384,7 +384,7 @@ public class QuestionFormListActivity extends ActionBarActivity implements Adapt
         new Thread(new Runnable() {
             public void run() {
                 while (download_progress_increaseValue < 100) {
-                    download_progress_increaseValue += 3;
+                    download_progress_increaseValue += 2;
                     // Update the progress bar and display the
                     //current value in the text view
                     handler.post(new Runnable() {
@@ -406,6 +406,7 @@ public class QuestionFormListActivity extends ActionBarActivity implements Adapt
         RetrofitAPI.getInstance(QuestionFormListActivity.this).getService().getFormDataByFormID(form_id, new Callback<String>() {
             @Override
             public void success(String s, Response response) {
+
 
 
                 List<QuestionFormData> datalist = parseJSONToQuestionFormObject(s);
@@ -549,6 +550,8 @@ public class QuestionFormListActivity extends ActionBarActivity implements Adapt
                 if(download_progress_dialog != null){
                     download_progress_dialog.setProgress(increaseValue);
                 }
+
+                Log.i("Response Value", obj.toString());
 
             }
             return datalist;
