@@ -158,6 +158,18 @@ public class CSVListActivity extends ActionBarActivity implements AdapterView.On
                         break;
 
                     case 1111:
+
+                        if (checkedPositions.size() < 0)
+                        {
+                            mode.finish();
+                        } else
+                        {
+                            MaterialDialog dialog = createLoadingDialog();
+                            dialog.show();
+                            uploadBulkFilesToServer(dialog, checkedPositions.get(0));
+                            mode.finish();
+                        }
+
                         break;
                 }
 
@@ -365,6 +377,60 @@ public class CSVListActivity extends ActionBarActivity implements AdapterView.On
             }
         });
 
+    }
+
+    public void uploadBulkFilesToServer(final MaterialDialog dialog, final int position)
+    {
+        final File file = datalist[position];
+        if (checkedPositions.size() <= 0)
+        {
+            dialog.dismiss();
+            return;
+        } else
+        {
+            TypedFile typedfile = new TypedFile("multipart/form-data", file);
+            RetrofitAPI.getInstance(this).getService().uploadSingleFileToServer(typedfile, new Callback<String>() {
+
+                public void failure(RetrofitError retrofiterror)
+                {
+                    checkedPositions.remove(checkedPositions.indexOf(Integer.valueOf(position)));
+                    if (checkedPositions.size() > 0)
+                    {
+                        uploadBulkFilesToServer(dialog, checkedPositions.get(0));
+                    } else
+                    {
+                        checkedPositions.clear();
+                        dialog.dismiss();
+                    }
+                    Toast.makeText(CSVListActivity.this, "Failed, May be already uploaded!", Toast.LENGTH_SHORT).show();
+                }
+
+
+                public void success(String s, Response response)
+                {
+                    Toast.makeText(CSVListActivity.this, "Success", Toast.LENGTH_SHORT).show();
+                    file.delete();
+                    datalist = sdCardHandler(form_description, proj_name, form_id, proj_id);
+                    ArrayAdapter adp = (ArrayAdapter)listView.getAdapter();
+                    adp.remove(adp.getItem(position));
+                    adp.notifyDataSetChanged();
+                    checkedPositions.remove(checkedPositions.indexOf(Integer.valueOf(position)));
+                    if (checkedPositions.size() > 0)
+                    {
+                        uploadBulkFilesToServer(dialog, checkedPositions.get(0));
+                        return;
+                    } else
+                    {
+                        checkedPositions.clear();
+                        dialog.dismiss();
+                        return;
+                    }
+                }
+
+
+            });
+            return;
+        }
     }
 
 }

@@ -86,13 +86,32 @@ public class RegisterActivity extends ActionBarActivity
 
             if (mImageList.get(i).contains("/storage")) {
 
-                Uri uri = Uri.fromFile(new File(mImageList.get(i)));
+                //Uri uri = Uri.fromFile(new File(mImageList.get(i)));
+                //Log.i("Uri String", uri.toString());
+                /*//hack code for lolipop version
+                if (Build.VERSION.SDK_INT == 22) {
+                    if (uri != null && uri.toString().length() > 0) {
+                        try {
+                            final String extractUriFrom = uri.toString();
+                            String firstExtraction = extractUriFrom.contains("com.google.android.apps.photos.contentprovider") ? extractUriFrom.split("/1/")[1] : extractUriFrom;
+                            firstExtraction = firstExtraction.contains("/ACTUAL") ? firstExtraction.replace("/ACTUAL", "").toString() : firstExtraction;
 
-                Picasso.with(RegisterActivity.this)
-                        .load(uri)
-                        .resize(512, 512)
-                        .centerCrop()
-                        .into(vh.imageView);
+                            String secondExtraction = URLDecoder.decode(firstExtraction, "UTF-8");
+                            uri = Uri.parse(secondExtraction);
+                        } catch (UnsupportedEncodingException e) {
+
+                        } catch (Exception e) {
+
+                        }
+                    }
+                }*/
+
+                    Picasso.with(RegisterActivity.this)
+                            .load("file://"+mImageList.get(i))
+                            .resize(512, 512)
+                            .centerCrop()
+                            .into(vh.imageView);
+
             } else {
 
                 Picasso.with(RegisterActivity.this)
@@ -132,16 +151,16 @@ public class RegisterActivity extends ActionBarActivity
         progress.setVisibility(View.INVISIBLE);
         progress_background.setVisibility(View.INVISIBLE);
     }
+    /* String[] projection = new String[]{
+                    MediaStore.Images.Media._ID,
+                    MediaStore.Images.Media.BUCKET_DISPLAY_NAME,
+                    MediaStore.Images.Media.DATE_TAKEN,
+                    MediaStore.Images.Media.EXTERNAL_CONTENT_URI.toString()
 
+
+            };*/
     private List<String> getListofImage() {
-       /* String[] projection = new String[]{
-                MediaStore.Images.Media._ID,
-                MediaStore.Images.Media.BUCKET_DISPLAY_NAME,
-                MediaStore.Images.Media.DATE_TAKEN,
-                MediaStore.Images.Media.EXTERNAL_CONTENT_URI.toString()
 
-
-        };*/
 
         List<String> imgList = new ArrayList<>();
 

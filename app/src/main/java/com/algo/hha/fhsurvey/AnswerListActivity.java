@@ -51,7 +51,7 @@ public class AnswerListActivity extends ActionBarActivity implements AdapterView
     String form_desc_ee;
     String form_id;
     String formdescription;
-    boolean isAlreadyExist;
+    boolean isHeaderAlreadyExist;
     ListView listView;
     Toolbar mToolbar;
     String proj_desc_ee;
@@ -66,7 +66,7 @@ public class AnswerListActivity extends ActionBarActivity implements AdapterView
         proj_desc_ee = "";
         form_desc_ee = "";
         checkedPositions = new ArrayList();
-        isAlreadyExist = false;
+        isHeaderAlreadyExist = false;
         desFile = null;
     }
 
@@ -270,6 +270,7 @@ public class AnswerListActivity extends ActionBarActivity implements AdapterView
 
     private void addData(UserData userdata, ActionMode actionmode)
     {
+        isHeaderAlreadyExist = false;
         HashMap hashmap = new HashMap();
         List list = AnswerDataORM.getOnlyAnswerDatalist(this, form_id, userdata.get_timestamp());
         SharedPreferences sharedpreferences = getSharedPreferences(Config.APP_PREFERENCE, 0);
@@ -286,7 +287,6 @@ public class AnswerListActivity extends ActionBarActivity implements AdapterView
         }
 
         Toast.makeText(this, "Done", Toast.LENGTH_SHORT).show();
-        isAlreadyExist = false;
         actionmode.finish();
     }
     private CellProcessor[] getProcessors()
@@ -355,8 +355,10 @@ public class AnswerListActivity extends ActionBarActivity implements AdapterView
             final CellProcessor[] processors = getProcessors();
 
             // write the header
-            if (isAlreadyExist)
+            if (!isHeaderAlreadyExist) {
                 mapWriter.writeHeader(CSV_HEADER);
+                isHeaderAlreadyExist = true;
+            }
 
 
             mapWriter.write(ANSWER, CSV_HEADER, processors);
@@ -401,7 +403,6 @@ public class AnswerListActivity extends ActionBarActivity implements AdapterView
         ((ProgressDialog) (obj)).show();
         for (int j = 0; j < arraylist.size(); j++)
         {
-            isAlreadyExist = false;
             sdCardHandler((UserData)arraylist.get(j), actionmode);
             ((ProgressDialog) (obj)).setProgress(j + 1);
         }

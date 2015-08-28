@@ -13,6 +13,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.afollestad.materialdialogs.MaterialDialog;
+import com.algo.hha.fhsurvey.api.APIConfig;
 import com.algo.hha.fhsurvey.api.RetrofitAPI;
 import com.algo.hha.fhsurvey.utility.Config;
 import com.algo.hha.fhsurvey.utility.Connection;
@@ -231,7 +232,7 @@ public class LoginActivity extends ActionBarActivity implements View.OnClickList
 
         }).build();
 
-        ((EditText)materialdialog.findViewById(R.id.customdialog_changeroute)).setText(sPref.getString(Config.SERVER_ROUTE, "http://fhsurvey.osakaohshomyanmar.com"));
+        ((EditText)materialdialog.findViewById(R.id.customdialog_changeroute)).setText(sPref.getString(Config.SERVER_ROUTE, APIConfig.BASE_URL));
         materialdialog.show();
     }
 
