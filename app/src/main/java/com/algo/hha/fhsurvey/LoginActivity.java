@@ -48,6 +48,9 @@ public class LoginActivity extends ActionBarActivity implements View.OnClickList
 
         context = getApplicationContext();
 
+
+        Toast.makeText(context, "Login Oncreate", Toast.LENGTH_LONG).show();
+
         login = (Button) findViewById(R.id.login_button);
         register = (TextView) findViewById(R.id.login_register);
         //forgotpassword = (TextView) findViewById(R.id.login_forgotpassword);
@@ -68,6 +71,8 @@ public class LoginActivity extends ActionBarActivity implements View.OnClickList
         login.setOnClickListener(this);
         register.setOnClickListener(this);
         //forgotpassword.setOnClickListener(this);
+
+
 
         setEnglishText();
 
