@@ -55,7 +55,7 @@ public class MainActivity extends ActionBarActivity implements AdapterView.OnIte
         TextView toolbarTitle = (TextView) mToolbar.findViewById(R.id.toolbarTitle);
         setSupportActionBar(mToolbar);
         getSupportActionBar().setTitle("");
-        getSupportActionBar().setIcon(R.drawable.ic_launcher);
+        getSupportActionBar().setIcon(R.mipmap.ic_launcher);
 
         project_listview = (ListView) findViewById(R.id.project_listview);
         project_listview.setOnItemClickListener(this);
